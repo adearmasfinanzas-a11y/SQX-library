@@ -28,3 +28,4 @@ Antes de dar por terminada cualquier plantilla:
 - [ ] ¿Trading Options tiene valores concretos elegidos (no solo "restringido por defecto")?
 - [ ] ¿La ficha tiene un resumen ejecutivo en prosa (objetivo, oportunidad de mercado, herramientas y por qué, tipo de resultado buscado) — no solo campos técnicos sueltos?
 - [ ] ¿Los criterios de aceptación y los rangos de SL/PT están justificados para esta plantilla en particular (no copiados de otra plantilla ni de un proyecto de ejemplo sin analizar si aplica)?
+- [ ] Si `Don't trade on weekends` está activado en el Build: ¿se verificó que `Friday Close Time`/`Sunday Open Time` tomaron el valor real esperado (ej. `23:00`), no un valor sin sentido como `00:38`? Bug real confirmado 2026-07-12: estos campos se guardan en segundos desde medianoche, escribir el número de la hora tal cual (`2300`) da un resultado roto — ver `pipeline-multitarea-y-diseno-is.md`, sección Retest.
