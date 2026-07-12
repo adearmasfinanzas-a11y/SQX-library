@@ -78,8 +78,7 @@ Pedido explícito del usuario: que el proyecto corra tarea a tarea dejando "simp
 
 ```
 Build
-  → Filtering (filtro rápido: descarta lo obviamente débil sin re-testear)
-  → CustomAnalysis (nuestro filtro OOS propio — descarta candidatas tipo 4.22.136, PF OOS < 1)
+  → Filtering (filtro OOS nativo, sin código — descarta candidatas tipo 4.22.136, PF OOS < 1; ver sección 3d, corrección 2026-07-12)
   → Retest (OOS sin solapar / mercado correlacionado, ver sección 1-3)
   → Filtering (umbral post-Retest, más estricto)
   → CreatePortfolio o AutomaticPortfolioBuilder (recién con varias candidatas ya limpias)
@@ -96,52 +95,25 @@ Build
 
 Con la corrida en curso acercándose a las 1000 estrategias, se investigó a fondo el mecanismo real de cada bloque de la secuencia — no solo el catálogo, sino cómo configurarlo de verdad — para poder ensamblar el pipeline sin fricción en cuanto haya suficiente materia prima.
 
-### CustomAnalysis — el hallazgo más importante: no hace falta `sqcli` a mano
+### Filtro de Profit Factor OOS — CORREGIDO (2026-07-12): no hace falta Java, es nativo
 
-Se encontró un ejemplo real nativo (`internal/extend/Snippets/SQ/CustomAnalysis/OutlierTrade.java`) que revela el mecanismo completo: es **Java**, mismo patrón que nuestros indicadores custom (Code Editor, mismo tipo de clase). Confirmado:
+**Versión anterior de esta sección (2026-07-11) proponía un `CustomAnalysis` en Java (`FilterByOOSProfitFactor.java`) para esto. Era una sobre-complicación — se corrige acá.**
 
-- La clase extiende `CustomAnalysisMethod`, constructor llama `super("Nombre", TYPE_FILTER_STRATEGY)`.
-- Se sobreescribe `filterStrategy(String project, String task, String databankName, ResultsGroup rg)` → `boolean` (`true` = conservar, `false` = descartar).
-- `this.getInputArgs()` lee los argumentos configurados en la tarea (coincide con el campo de texto que vimos en la pantalla de configuración) — así el mismo snippet sirve para cualquier plantilla, solo cambia el argumento.
-- **El hallazgo clave:** existe `SampleTypes.OutOfSample` como valor real del motor (confirmado grepeando otros snippets nativos, ej. `Stagnation.java`, `MaxNewHighDuration.java`) — y `result.stats(Directions.Both, PLType, SampleTypes.OutOfSample)` devuelve un objeto `SQStats` con `StatsKey.PROFIT_FACTOR` ya calculado. **No hace falta sumar Profit/Loss a mano como hicimos con `sqcli` + `awk`** — el motor ya tiene la función nativa exacta que necesitábamos, calculada con su propia lógica (más confiable que nuestra aproximación manual).
+El usuario preguntó por qué haría falta escribir un `.java` si la tarea se arma desde la interfaz. Al investigarlo a fondo se encontró que **no hace falta**: se decompiló la clase real `com.strategyquant.tradinglib.SampleTypes` (con `javap`, incluido en la propia instalación en `j64/bin/`) y se confirmaron sus valores numéricos reales:
 
-**Borrador del snippet propuesto** (`FilterByOOSProfitFactor.java`, no escrito ni compilado todavía — diseño, no hecho):
-```java
-package SQ.CustomAnalysis;
-
-import com.strategyquant.lib.*;
-import com.strategyquant.datalib.*;
-import com.strategyquant.tradinglib.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class FilterByOOSProfitFactor extends CustomAnalysisMethod {
-    public static final Logger Log = LoggerFactory.getLogger(FilterByOOSProfitFactor.class);
-
-    public FilterByOOSProfitFactor() {
-        super("FilterByOOSProfitFactor", TYPE_FILTER_STRATEGY);
-    }
-
-    @Override
-    public boolean filterStrategy(String project, String task, String databankName, ResultsGroup rg) throws Exception {
-        double minPF = Double.parseDouble(this.getInputArgs().trim());
-        Result result = rg.mainResult();
-        if (result == null) return false;
-
-        SQStats statsOOS = result.stats(Directions.Both, PLType.Money, SampleTypes.OutOfSample);
-        if (statsOOS == null) return false;
-
-        double pfOOS = statsOOS.getDouble(StatsKey.PROFIT_FACTOR);
-        Log.debug("PF OOS: {} (mínimo requerido: {})", pfOOS, minPF);
-        return pfOOS >= minPF;
-    }
-}
 ```
-Argumento configurado en la tarea: umbral mínimo de PF OOS. Con la evidencia manual que ya tenemos (8/12 candidatas ≥1.0, el resto descartado), **1.0 es el piso duro propuesto** — se podría subir a 1.1-1.2 más adelante, una vez que haya volumen suficiente de candidatas como para poder ser más exigentes sin quedarse sin materia prima.
+FullSample = 127
+InSample = 10
+OutOfSample = 20
+```
 
-### Filtering — propuesta concreta
+Y ese mismo `sampleType="20"` ya aparece usado en archivos XML nativos reales de la instalación (ej. `internal/plugins/TaskRetest/task.xml`, condiciones de Walk-Forward Matrix/Optimization). Esto confirma que **la tarea nativa `Filtering` (misma estructura genérica `<Conditions>`/`<Column-Value>` que usa `Build` y `Retest` en sus Rankings) puede filtrar por cualquier columna con selector de tipo de muestra — incluido "Out of Sample" — directamente desde la interfaz, sin ningún código propio.**
 
-Filtro barato antes de gastar el `CustomAnalysis` en Java: umbral permisivo, solo para descartar lo obviamente inútil (ej. `NetProfit(main) > 0`) — dado que ya pasaron el Ranking del Build, no se espera que este paso elimine mucho, es una red de seguridad barata, no el filtro principal.
+Conclusión: `FilterByOOSProfitFactor.java` **no se escribe**. El filtro de Profit Factor OOS se arma como una tarea `Filtering` nativa: columna `ProfitFactor`, muestra `Out of Sample`, comparador `≥`, valor `1.0` (piso duro propuesto, con evidencia manual real de 8/12 candidatas ≥1.0 en corridas previas — se podría subir a 1.1-1.2 más adelante con más volumen). `CustomAnalysis` (Java) queda reservado para si en el futuro hace falta algo que el selector de columna+muestra+comparador genuinamente no pueda expresar (ej. una fórmula propia entre varias columnas) — no es el caso de este filtro.
+
+### Filtering — propuesta concreta (actualizada)
+
+Con el hallazgo de arriba, un solo `Filtering` puede cubrir tanto el filtro barato inicial como el filtro de Profit Factor OOS en una sola tarea con varias condiciones simultáneas (ej. `NetProfit(main) > 0` **y** `ProfitFactor(Out of Sample) ≥ 1.0`), en vez de dos tareas separadas como se había propuesto antes.
 
 ### Retest — propuesta concreta
 
