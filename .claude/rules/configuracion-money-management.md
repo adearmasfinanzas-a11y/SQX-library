@@ -23,3 +23,11 @@ Los 4 proyectos de ejemplo reales analizados (`GBPJPY BREAKOUT H1`, `GOLD BREAKO
 ## Excepción
 
 Si una plantilla concreta necesita un Money Management distinto durante la investigación por una razón estructural del activo o la hipótesis (ej. una hipótesis que depende explícitamente de escalar posición con la señal), se documenta explícitamente en la ficha y en el changelog — no se asume el estándar por defecto en silencio, pero tampoco se cambia sin dejar constancia de por qué.
+
+## Comisiones y spread: broker objetivo, definido ANTES del Build (establecido 2026-07-12)
+
+**Regla dura:** antes de configurar el Build de cualquier plantilla nueva, hay que preguntarle al usuario **a qué broker apunta** — nunca asumir un valor genérico de comisión/spread sin esa conversación previa (ver `CLAUDE.md`, Paso 4). La estructura de costos reales varía mucho entre brokers y afecta directamente si una estrategia es viable o no.
+
+**Patrón recomendado (propuesto por el usuario, 2026-07-12):** el Build puede usar comisión/spread **genéricos pero bien justificados** (razonables para la categoría de broker/activo, documentados con su fuente), y **subir la exigencia en el Retest** como prueba de margen de seguridad — no al revés. La idea: si la estrategia sobrevive con costos moderadamente más altos que los reales esperados, hay más confianza de que no se rompe por un centavo de diferencia con el broker real elegido más adelante.
+
+**Cuánto subir en el Retest — moderado, no arbitrario:** un incremento real (~30-35% sobre el valor del Build) para que la prueba de estrés tenga sentido, pero sin exagerar a un valor poco realista que rompa estrategias por una razón ajena a su calidad real. Ejemplo real aplicado en `EURUSD-REVRANGE-H1-001`: Build usó `Commission SizeBased=6` y `Swap money long=-6.5/short=-3.5`; Retest subido a `Commission SizeBased=8` y `Swap long=-8/short=-5` (~33% de incremento) — a confirmar con el usuario caso por caso, no es un porcentaje fijo automático.
