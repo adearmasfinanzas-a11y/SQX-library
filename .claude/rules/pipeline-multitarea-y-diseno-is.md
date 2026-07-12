@@ -8,6 +8,17 @@ naturaleza: REQUISITO PENDIENTE DE VALIDAR — no aplicado todavía en ninguna p
 
 Esta regla existe porque el usuario pidió (2026-07-07) que **cada proyecto tenga todo preconfigurado con sentido común hacia un objetivo** — no solo el Build, sino el pipeline completo de validación encadenado automáticamente. Se investigó y verificó contra un proyecto de ejemplo real (`GBPJPY BREAKOUT H1 - Dukascopy`) antes de proponer nada.
 
+## 0. Metodología fija para incorporar cada tarea nueva al pipeline (establecida 2026-07-12)
+
+El incidente del filtro OOS (se proponía escribir `CustomAnalysis` en Java sin verificar antes si la tarea nativa `Filtering` ya lo resolvía — corregido, ver `mecanismo-condiciones-filtrado.md`) estableció el método de trabajo fijo para **cada** tarea que se incorpore al pipeline de cualquier plantilla, no solo esta:
+
+1. **Investigar a fondo la tarea nativa antes de proponer configuración.** No asumir que hace falta código propio — SQ es una plataforma completa; verificar primero qué cubre nativamente (decompilando las clases reales del motor con `javap`, incluido en `j64/bin/` de la instalación, cruzando contra `task.xml` default del plugin en `internal/plugins/`, y contra ejemplos reales de proyectos de la instalación) antes de escribir un `CustomAnalysis`/`CallExternalScript` o cualquier otro mecanismo de código propio.
+2. **Documentar lo aprendido como regla reutilizable**, no como nota de esta plantilla puntual — un archivo `.claude/rules/mecanismo-*.md` por tipo de tarea (o ampliando uno existente si aplica), enlazado desde `CLAUDE.md`. El objetivo es que cualquier plantilla futura (otra hipótesis, otro activo) pueda usar esa tarea sin tener que re-investigar desde cero.
+3. **Proponer la configuración concreta según el contexto** — objetivo de la plantilla actual, evidencia real ya reunida (ej. 8/12 candidatas con PF OOS≥1 en corridas previas) — nunca un valor copiado sin justificar.
+4. **La propuesta siempre pasa por aprobación del usuario antes de implementarse.** Se discute, se ajusta si hace falta, y solo entonces se aplica — mismo principio ya vigente en el resto del protocolo (`CLAUDE.md`: "Nunca se implementa un indicador nuevo sin aprobación explícita").
+
+Pedido explícito del usuario: que este mismo proceso (investigar → documentar → proponer → aprobar → implementar) se repita para cada tarea nueva que se vaya agregando, para ir construyendo un catálogo propio de "qué se puede lograr sin programar nada" en SQ.
+
 ## 1. Diseño de IS/OOS con criterio de régimen, no partición mecánica
 
 **No usar un 70/30 fijo sin criterio.** La práctica seria es walk-forward: ciclos sucesivos de ajuste+validación que avanzan en el tiempo, no una partición estática única. Métrica de referencia: **Walk Forward Efficiency (WFE)** = rendimiento anualizado OOS / rendimiento anualizado IS — **WFE≥0.5 es el mínimo aceptable, ≥0.7 es excelente** ([Kiploks](https://kiploks.com/research/what-is-walk-forward-analysis-complete-guide-for-algo-traders), [QuantInsti](https://blog.quantinsti.com/walk-forward-optimization-introduction/)).
