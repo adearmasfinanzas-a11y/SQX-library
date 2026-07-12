@@ -137,3 +137,21 @@ Confirmado:
 - **`MaxStrategies=0` = "todas" (sin tope)** — confirma que el valor 0 es el que representa "sin límite", no un campo vacío/nulo.
 - **`ConditionsType=0` = "aplica a las estrategias que cumplan las condiciones"** (el filtro normal, el que usamos) — **esto corrige la ficha**: antes se había asumido, solo por el nombre del campo Java (`Keep=1` en la clase `ConditionsTypes`), que "Keep" (1) sería la opción intuitiva de "aplicar a las que cumplen". La evidencia real del preset guardado prueba lo contrario: es `0` el que hace eso. No se volvió a verificar cuál valor corresponde a la opción inversa ("ignora las que cumplan, aplica a todas las demás") — sería lo siguiente a confirmar si hace falta esa variante en el futuro.
 - El archivo también trae un bloque `<Rankings>` con `MaxStrategies=1000`, `Ranking type="NetProfit"`, `StopCondition databank-full passedStrategies=1000` — esto **no es configuración propia de la tarea Filtering**, es residuo/herencia del contexto del proyecto al guardar el preset (coincide con los valores del Build). No confundir esto con ajustes reales de Filtering.
+
+## Cómo se ejecuta una tarea individual dentro de un proyecto multi-tarea (confirmado en la práctica, 2026-07-12)
+
+Click derecho sobre cualquier tarea en el panel de progreso del proyecto (`Proyectos a medida / <nombre> / Progreso`) abre un menú con, entre otras, estas dos opciones — **distintas y confirmadas por uso real**:
+
+- **"Ejecute el proyecto desde aquí"** — corre la secuencia completa del pipeline **a partir de** esa tarea (útil para reanudar un pipeline largo desde donde quedó, sin repetir lo anterior).
+- **"Ejecutar sólo esta tarea"** — corre **únicamente** esa tarea, sin tocar el resto de la secuencia. Esta es la que se usó para correr `Filter Strategies` sin re-disparar el Build (que ya había terminado y hubiera tardado ~2.5 días de nuevo).
+
+Otras opciones del mismo menú, útiles para escalar a futuras plantillas sin reconfigurar a mano: **"Copiar la configuración en una o varias tareas"** y **"Aplicación masiva de la configuración de esta tarea"** (aplican la config de una tarea ya armada a otras) — más rápido que reexportar/reimportar el `.cfx` preset para reutilizar dentro del mismo proyecto o entre tareas del mismo tipo.
+
+## Resultado real del primer filtro OOS aplicado (`EURUSD-REVRANGE-H1-001`, 2026-07-12)
+
+Corrida sobre las 1000 estrategias en bruto del Build (condiciones: ProfitFactor OOS≥1.2 AND NumberOfTrades OOS≥30, ambas direcciones, dinero):
+
+- **535 de 1000 (53.5%) pasaron** → movidas a `OOS_Filtrado`.
+- **465 de 1000 (46.5%) no pasaron** → quedaron en `Results`.
+
+Tasa de aprobación bastante más alta de lo que sugería la evidencia manual previa de 12 candidatas (donde 8/12, 67%, pasaban con el piso más laxo de PF OOS≥1.0) — con 1000 candidatas y umbrales más estrictos (1.2 + mínimo de trades), el resultado real fue 53.5%. Buen recordatorio de no proyectar conclusiones firmes desde una muestra de 12 al comportamiento real sobre 1000.
