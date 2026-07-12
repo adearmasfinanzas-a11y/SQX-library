@@ -127,3 +127,9 @@
 - Ejecutada con "Ejecutar sólo esta tarea" (no reprocesa el Build). **Resultado: 535 de 1000 (53.5%) pasaron**, movidas a `OOS_Filtrado`; 465 quedaron en `Results` sin pasar.
 - Preset de la tarea archivado en `pipeline_tareas/Filtro_OOS_PF1.2_Trades30.cfx` y `pipeline_tareas/filtering_task1_condiciones_oos.xml`.
 - **Pendiente:** decidir el siguiente paso del pipeline sobre las 535 (Retest, o un segundo filtro adicional antes de la etapa cara de Retest).
+
+## 2026-07-12 — Segunda tarea del pipeline (`SaveToFiles`) armada y ejecutada: backup del bruto formalizado
+- Se agregó `SaveToFiles` entre Build y Filtering (orden correcto del pipeline, corrigiendo el orden en que se había corrido la primera vez). Configuración: Input `Results`, `SaveInSqxFormat=true`, `ExportDatabank=true` (resumen XLSX, dato "All"), `ExportTrades`/HTML/PDF/código fuente desactivados, Magic Number desactivado, nota custom `corrida01_bruto_build_2026-07-12`. Ver `.claude/rules/mecanismo-savetofiles.md` para el detalle técnico completo.
+- Corrida "Ejecute el proyecto desde aquí" desde la tarea 2 (Save to files), que encadenó automáticamente con la tarea 3 (Filtering).
+- **Verificado en disco:** 1000 `.sqx` + `DatabankExport.xlsx` (235KB) en `Reversion-Media\_runs\2026-07-12_corrida01\01_bruto_build\`, nota custom confirmada embebida en una estrategia de muestra. Databanks tras la corrida: `Results` (465), `OOS_Filtrado` (535) — mismo resultado que la primera corrida del filtro.
+- **Pendiente:** armar la tarea `Retest` sobre las 535 de `OOS_Filtrado`.
