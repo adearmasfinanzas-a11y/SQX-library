@@ -23,6 +23,14 @@ Pedido explícito del usuario: que este mismo proceso (investigar → documentar
 
 **No usar un 70/30 fijo sin criterio.** La práctica seria es walk-forward: ciclos sucesivos de ajuste+validación que avanzan en el tiempo, no una partición estática única. Métrica de referencia: **Walk Forward Efficiency (WFE)** = rendimiento anualizado OOS / rendimiento anualizado IS — **WFE≥0.5 es el mínimo aceptable, ≥0.7 es excelente** ([Kiploks](https://kiploks.com/research/what-is-walk-forward-analysis-complete-guide-for-algo-traders), [QuantInsti](https://blog.quantinsti.com/walk-forward-optimization-introduction/)).
 
+### 1b. Práctica estándar: reservar datos físicamente fuera del alcance del Build para el Retest (establecida 2026-07-12)
+
+El usuario aplicó, en `EURUSD-REVRANGE-H1-001`, una barrera más fuerte contra el sobreajuste que el simple split IS/OOS dentro del mismo dataset: **actualizó los datos históricos de la instalación hasta una fecha reciente (2026), pero deliberadamente no incluyó ese tramo más nuevo en el rango de datos que el Build usó** (Build se detuvo en `2024.12.31`). Resultado: el Build **nunca tuvo acceso físico** a esos datos, ni siquiera indirectamente vía el split IS/OOS interno — es una separación real, no solo una partición estadística dentro de lo mismo que el motor ya vio.
+
+**Se fija como práctica estándar para toda plantilla futura:** al preparar los datos históricos de un proyecto nuevo, reservar conscientemente un tramo final reciente **fuera** del rango de fechas configurado en el Build, para usarlo exclusivamente como ventana de datos del Retest. La ventana de Retest debe traer los datos **hasta la fecha más actual disponible** (no detenerse antes) salvo que haya una razón concreta para reservar una porción aparte para una validación posterior — más operaciones reales en la ventana de Retest fortalece la confiabilidad estadística del resultado, mismo criterio ya aplicado al mínimo de `NumberOfTrades` del filtro OOS.
+
+**Confirmado por fuentes externas (2026-07-12) que esto es práctica reconocida, no una idea suelta:** es una versión reforzada del walk-forward validation estándar, que ya usa un "embargo period" (período de cuarentena temporal, ej. ~30 días) entre entrenamiento y validación específicamente para evitar fuga de datos — la separación **física** aplicada acá (el dato ni siquiera estaba descargado en la instalación durante el Build) es un caso extremo del mismo principio de "purging" (técnica estándar contra data leakage: excluir del set de entrenamiento cualquier muestra que pueda filtrar información hacia el set de validación). Fuentes: [Quanthop — Parameter Optimization Without Overfitting](https://quanthop.com/learn/backtesting-optimization/parameter-optimization), [CodeSignal — Addressing Data Leakage in Time Series](https://codesignal.com/learn/courses/preparing-financial-data-for-machine-learning/lessons/addressing-data-leakage-in-time-series), [QuantInsti — Walk-Forward Optimization](https://blog.quantinsti.com/walk-forward-optimization-introduction/).
+
 **EURUSD (y por extensión otros pares FX mayores) tuvo regímenes genuinamente distintos, no una serie homogénea:**
 - 2008: crisis financiera global (volatilidad extrema, no representativa de operativa normal).
 - 2010-2012: crisis de deuda soberana europea.
@@ -155,9 +163,16 @@ Conclusión: `FilterByOOSProfitFactor.java` **no se escribe**. El filtro de Prof
 
 Con el hallazgo de arriba, un solo `Filtering` puede cubrir tanto el filtro barato inicial como el filtro de Profit Factor OOS en una sola tarea con varias condiciones simultáneas (ej. `NetProfit(main) > 0` **y** `ProfitFactor(Out of Sample) ≥ 1.0`), en vez de dos tareas separadas como se había propuesto antes.
 
-### Retest — propuesta concreta
+### Retest — investigado y propuesta concreta (actualizado 2026-07-12)
 
-Ventana OOS adicional que no se solape con la ya usada en el Build (2015-2024, con OOS interno 2021.12.18-2024.12.31) — evaluar si hay datos más recientes disponibles para una ventana genuinamente nueva. Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) para chequear si la lógica se sostiene fuera del activo específico donde se descubrió.
+Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`) contra el `Retest-Task2.xml` real de `GBPJPY BREAKOUT H1 - Dukascopy`:
+
+- **Databank Input=Output** en el ejemplo real (mismo databank de entrada y salida — testea in-place). Para nuestro caso: `OOS_Filtrado` → `OOS_Filtrado`.
+- **Money Management por defecto `FixedSize`** — coincide con el estándar ya fijado en `configuracion-money-management.md`, no hay que tocarlo.
+- Comparte el mismo framework de condiciones/Rankings que `Filtering` y `Build` — ver `mecanismo-condiciones-filtrado.md`, nada nuevo que aprender ahí.
+- **Walk-Forward Optimization/Matrix existe en la estructura pero está desactivado (`use="false"`) incluso en el proyecto de ejemplo real validado** — no es un default recomendado, hay que decidir explícitamente si se activa para esta plantilla.
+- **Ventana de datos:** ver sección 1b — datos reservados deliberadamente fuera del alcance del Build, traídos hasta la fecha más actual disponible (no solo hasta donde ya estaban). Pendiente: confirmar la fecha exacta de corte una vez que el usuario actualice los datos hasta el presente.
+- Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) queda como candidato para chequear si la lógica se sostiene fuera del activo específico donde se descubrió — a decidir si se incluye en esta primera pasada o se deja para más adelante.
 
 ### CreatePortfolio / AutomaticPortfolioBuilder — propuesta concreta
 
