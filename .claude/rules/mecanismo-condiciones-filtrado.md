@@ -65,9 +65,9 @@ Este es el hallazgo que corrigió la sobre-ingeniería original. El atributo XML
 
 ## Tarea `Filtering` en detalle (`FilteringTask.class`, decompilado)
 
-- **`actionType`** (decompilado de `actionTypeToText()`): `0 = Deleted` (elimina las que NO pasan la condición), `1 = Copied` (copia las que SÍ pasan a la base destino, sin tocar la fuente), `2 = Moved` (mueve las que SÍ pasan a la base destino, las saca de la fuente).
-- **`maxStrategies`:** tope opcional de cuántas estrategias puede aceptar el filtro, independiente de las condiciones.
-- **`databankSource` / `databankTarget`:** de dónde lee y a dónde escribe — mismo databank si se usa `actionType=0` (Deleted, filtra in-place).
+- **`actionType`** (decompilado de `actionTypeToText()`): `0 = Deleted` (elimina las que NO pasan la condición), `1 = Copied` (copia las que SÍ pasan a la base destino, sin tocar la fuente), `2 = Moved` (mueve las que SÍ pasan a la base destino, las saca de la fuente). En la interfaz simplificada (`simpleSettings`), este campo se ve como una elección entre "copiar de una base de datos a otra" o "pasar de una base de datos a otra" (Deleted no aparece como opción visible ahí).
+- **`maxStrategies`:** tope **opcional** de cantidad, **totalmente independiente de las `Conditions`** — en la interfaz aparece como "¿aplica a todas o a un número específico?", ANTES de la sección de Condiciones. **Confirmado en la práctica (2026-07-12, corrección del usuario):** esto no es el filtro — es un techo duro de cantidad que se aplica ADEMÁS del filtro de condiciones (ej. "muevan como máximo las primeras N que califiquen"). **Para dejar que el filtro de Condiciones sea el único criterio, dejar esta opción en "todas"** — si se deja un número específico, aunque haya cientos de candidatas que cumplan la condición, solo pasarían las primeras N.
+- **`databankSource` / `databankTarget`:** de dónde lee y a dónde escribe — mismo databank si se usa `actionType=0` (Deleted, filtra in-place). **Confirmado en la práctica (2026-07-12):** el campo Target **no admite escribir un nombre nuevo libremente** — es un desplegable que solo lista databanks ya existentes en el proyecto. Si se necesita una base nueva (ej. para separar "pasaron el filtro" de "Results"), hay que crearla antes desde la herramienta de gestión de Databanks del proyecto, y recién entonces aparece disponible para elegir como Target.
 - Puede tener **múltiples condiciones simultáneas** (`ArrayList<Condition>`), cada una con su propio `use="true/false"` — se pueden desactivar sin borrar, mismo patrón que ya conocemos de Building Blocks.
 
 ## Qué significa esto para el pipeline de esta plantilla (y cualquier futura)
@@ -80,6 +80,31 @@ El filtro de "Profit Factor en Out-of-Sample ≥ umbral" (lo que antes íbamos a
 
 `CustomAnalysis` (Java) queda reservado genuinamente para lo que este framework de condiciones no pueda expresar — una fórmula propia que combine varias columnas con lógica no lineal, por ejemplo. Antes de escribir un `CustomAnalysis` nuevo en el futuro, **revisar primero si el catálogo de columnas de esta ficha ya lo resuelve**.
 
-## Lo que queda sin verificar (honestidad, no se afirma sin evidencia)
+## Ejemplo real confirmado (condición armada y exportada, 2026-07-12)
 
-Los atributos `market`, `subresult`, `confidenceLevel`, `pctRatio` que aparecen en los `<Column-Value>` reales de `Build-Task1.xml`/`TaskRetest/task.xml` **no pertenecen a la clase `ColumnConditionValue`** decompilada (que solo tiene `resultType`, `direction`, `plType`, `sampleType`, `columnType`, `pctRatio`, `column`) — es decir, `pctRatio` sí está confirmado, pero `market`, `subresult` y `confidenceLevel` deben pertenecer a una clase más específica (probablemente ligada a CrossCheck/Monte Carlo, dado que vimos `confidenceLevel="80"` en condiciones de `MonteCarloRetest`). No se investigó más a fondo por no ser necesario para el uso estándar de esta plantilla — pendiente si en el futuro se necesita una condición de confianza estadística (Monte Carlo) específica.
+Se armó en la interfaz (tarea `Filter Strategies`, primer filtro post-Build de `EURUSD-REVRANGE-H1-001`) la condición real "Profit Factor OOS ≥1.2 y NumberOfTrades OOS ≥30, ambas direcciones, en dinero", y se exportó a XML con el botón de guardado de configuración (`D:\Ariel De Armas\Templates SQX\filters.xml`). Resultado real:
+
+```xml
+<Conditions>
+  <Condition use="true">
+    <Left-Side valueType="column">
+      <Column-Value column="ProfitFactor" columnType="0" format="Decimal2" resultType="main"
+        direction="0" sampleType="20" plType="10" confidenceLevel="50" market="1"
+        subresult="30" pctRatio="0" class="ProfitFactor"/>
+    </Left-Side>
+    <Comparator value="&gt;="/>
+    <Right-Side valueType="numeric"><Numeric-Value value="1.2"/></Right-Side>
+  </Condition>
+  <Condition use="true">
+    <Left-Side valueType="column">
+      <Column-Value column="NumberOfTrades" columnType="0" format="Integer" resultType="main"
+        direction="0" sampleType="20" plType="10" confidenceLevel="50" market="1"
+        subresult="30" pctRatio="0" class="NumberOfTrades"/>
+    </Left-Side>
+    <Comparator value="&gt;="/>
+    <Right-Side valueType="numeric"><Numeric-Value value="30"/></Right-Side>
+  </Condition>
+</Conditions>
+```
+
+Esto **confirma con evidencia real** (no solo decompilación) los atributos que habían quedado pendientes de verificar: `confidenceLevel="50"`, `market="1"` y `subresult="30"` aparecen como **valores fijos por defecto** en condiciones sobre `resultType="main"` (resultado principal, ni Monte Carlo ni Walk-Forward) — no varían según la columna elegida ni según el tipo de muestra (`sampleType`). Es razonable asumir que solo cambian cuando `resultType` apunta a algo específico de Monte Carlo (`confidenceLevel` ahí sí tendría sentido variable, ej. 80/95) o de Retest en mercados adicionales (`market` variable). No se investigó ese caso porque no hace falta para el uso estándar de esta plantilla — pendiente si en el futuro se arma una condición sobre resultados de Monte Carlo/mercado adicional específicamente.
