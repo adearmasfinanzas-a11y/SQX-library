@@ -31,6 +31,17 @@ El usuario aplicó, en `EURUSD-REVRANGE-H1-001`, una barrera más fuerte contra 
 
 **Confirmado por fuentes externas (2026-07-12) que esto es práctica reconocida, no una idea suelta:** es una versión reforzada del walk-forward validation estándar, que ya usa un "embargo period" (período de cuarentena temporal, ej. ~30 días) entre entrenamiento y validación específicamente para evitar fuga de datos — la separación **física** aplicada acá (el dato ni siquiera estaba descargado en la instalación durante el Build) es un caso extremo del mismo principio de "purging" (técnica estándar contra data leakage: excluir del set de entrenamiento cualquier muestra que pueda filtrar información hacia el set de validación). Fuentes: [Quanthop — Parameter Optimization Without Overfitting](https://quanthop.com/learn/backtesting-optimization/parameter-optimization), [CodeSignal — Addressing Data Leakage in Time Series](https://codesignal.com/learn/courses/preparing-financial-data-for-machine-learning/lessons/addressing-data-leakage-in-time-series), [QuantInsti — Walk-Forward Optimization](https://blog.quantinsti.com/walk-forward-optimization-introduction/).
 
+### 1c. Protocolo automático de diseño IS/OOS para toda plantilla futura (establecido 2026-07-12)
+
+Pedido explícito del usuario: que para cada plantilla nueva, el asistente pueda — sin que el usuario tenga que pensarlo desde cero cada vez —
+
+1. **Leer los datos disponibles del activo** (rango de fechas real del histórico ya cargado en la instalación para ese símbolo/timeframe).
+2. **Contrastar con información en internet** — igual que ya se hizo para EURUSD abajo: identificar quiebres de régimen reales del activo concreto (no genéricos) dentro de ese rango.
+3. **Sugerir automáticamente** el rango de tiempo a usar en el Build, cómo dividirlo en IS/OOS, y el criterio de distribución de esos períodos — en función del histórico real disponible **y** de la hipótesis de la plantilla (ej. una hipótesis de ruptura puede querer incluir deliberadamente períodos de alta volatilidad que una de reversión preferiría excluir del IS).
+4. La actualización de datos en sí (traer el histórico hasta la fecha más actual) se sigue haciendo manualmente desde la interfaz por ahora — **la tarea nativa `UpdateData`** (ya catalogada en la sección 3b) es la candidata natural para automatizar esto más adelante dentro del propio pipeline, pendiente de investigar con la misma metodología del punto 0 antes de proponerla.
+
+**Honestidad sobre el punto 1 (leer datos disponibles):** se intentó leer directamente el archivo binario de histórico (`.dat`) de esta instalación durante esta sesión y no fue posible sin las herramientas propias de SQ — **no hay todavía un método confirmado** para que el asistente determine el rango de fechas real de un histórico sin pasar por la interfaz o por `sqcli`. Queda como investigación pendiente (con la misma disciplina de verificar antes de asumir) antes de poder ofrecer el punto 1 de forma verdaderamente automática — por ahora, se le pide al usuario que confirme el rango real desde la pestaña de Datos.
+
 **EURUSD (y por extensión otros pares FX mayores) tuvo regímenes genuinamente distintos, no una serie homogénea:**
 - 2008: crisis financiera global (volatilidad extrema, no representativa de operativa normal).
 - 2010-2012: crisis de deuda soberana europea.
