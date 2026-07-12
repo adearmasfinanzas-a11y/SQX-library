@@ -61,7 +61,7 @@ Este es el hallazgo que corrigió la sobre-ingeniería original. El atributo XML
 
 - **`Directions`:** `Both=0`, `Long=1`, `Short=-1` — filtra por dirección de operación si hace falta.
 - **`PlTypes`:** `Money=10`, `Percent=20`, `Pips/Ticks=30`, `OpenMoney=40`, `OpenPercent=50` — en qué unidad se expresa el Profit/Loss de la columna.
-- **`ConditionsTypes`:** `ThrowAway=0`, `Keep=1` — (nota: en `FilteringTask` real, los valores 2 y 3 de `conditionsType` tienen un significado especial adicional: reutilizan el motivo de rechazo que la propia estrategia ya trae desde el Build en vez de evaluar la lista de `<Conditions>` — caso avanzado, no necesario para nuestro uso estándar).
+- **`ConditionsTypes`:** clase decompilada define `ThrowAway=0`, `Keep=1` — **pero el nombre del enum no coincide con el comportamiento real observado, corregido con evidencia (ver más abajo): `ConditionsType=0` es el que efectivamente selecciona "aplica a las que cumplen las condiciones" (el filtro normal e intuitivo), no `1` como el nombre `Keep` sugeriría a primera vista.** No confiar en el nombre del campo Java sin confirmar contra un XML real exportado — exactamente el tipo de error que esta ficha busca evitar. (Los valores 2 y 3, vistos en el bytecode de `FilteringTask`, tienen un significado especial adicional: reutilizan el motivo de rechazo que la propia estrategia ya trae desde el Build, sin evaluar la lista de `<Conditions>` — caso avanzado, no necesario para nuestro uso estándar. Corresponden a las opciones de radio "Éxito"/"Fallido" de la interfaz.)
 
 ## Tarea `Filtering` en detalle (`FilteringTask.class`, decompilado)
 
@@ -108,3 +108,32 @@ Se armó en la interfaz (tarea `Filter Strategies`, primer filtro post-Build de 
 ```
 
 Esto **confirma con evidencia real** (no solo decompilación) los atributos que habían quedado pendientes de verificar: `confidenceLevel="50"`, `market="1"` y `subresult="30"` aparecen como **valores fijos por defecto** en condiciones sobre `resultType="main"` (resultado principal, ni Monte Carlo ni Walk-Forward) — no varían según la columna elegida ni según el tipo de muestra (`sampleType`). Es razonable asumir que solo cambian cuando `resultType` apunta a algo específico de Monte Carlo (`confidenceLevel` ahí sí tendría sentido variable, ej. 80/95) o de Retest en mercados adicionales (`market` variable). No se investigó ese caso porque no hace falta para el uso estándar de esta plantilla — pendiente si en el futuro se arma una condición sobre resultados de Monte Carlo/mercado adicional específicamente.
+
+## Preset completo de la tarea confirmado (guardado por el usuario, 2026-07-12) — corrige un error propio
+
+El usuario guardó el preset **completo** de la tarea (no solo las condiciones) desde el botón "Guardar configuración" de la pestaña de ejecución, como `.cfx` (mismo formato ZIP que `project.cfx`) en `D:\Ariel De Armas\Templates SQX\Filtro_OOS_PF1.2_Trades30.cfx`. Al abrirlo (`config.xml` interno) se confirmaron con evidencia real varios valores que antes solo se habían decompilado o supuesto:
+
+```xml
+<Task name="Filter strategies" type="Filtering" taskXMLFile="Filtering-Task1.xml" version="143.2708">
+  <Settings>
+    <Filtering>
+      <ActionType>2</ActionType>
+      <MaxStrategies>0</MaxStrategies>
+      <ConditionsType>0</ConditionsType>
+      <Conditions>...</Conditions>
+    </Filtering>
+    <Databanks>
+      <Databank label="Source databank" name="Source" value="Results"/>
+      <Databank label="Target databank" name="Target" value="OOS_Filtrado"/>
+    </Databanks>
+    ...
+  </Settings>
+</Task>
+```
+
+Confirmado:
+- **Nombre real de tarea en el archivo del proyecto:** `Filtering-TaskN.xml` — mismo patrón de nombrado que `Build-TaskN.xml`/`Retest-TaskN.xml` ya conocido.
+- **`ActionType=2` = Moved** — confirma la decompilación de `actionTypeToText()`, sin discrepancia.
+- **`MaxStrategies=0` = "todas" (sin tope)** — confirma que el valor 0 es el que representa "sin límite", no un campo vacío/nulo.
+- **`ConditionsType=0` = "aplica a las estrategias que cumplan las condiciones"** (el filtro normal, el que usamos) — **esto corrige la ficha**: antes se había asumido, solo por el nombre del campo Java (`Keep=1` en la clase `ConditionsTypes`), que "Keep" (1) sería la opción intuitiva de "aplicar a las que cumplen". La evidencia real del preset guardado prueba lo contrario: es `0` el que hace eso. No se volvió a verificar cuál valor corresponde a la opción inversa ("ignora las que cumplan, aplica a todas las demás") — sería lo siguiente a confirmar si hace falta esa variante en el futuro.
+- El archivo también trae un bloque `<Rankings>` con `MaxStrategies=1000`, `Ranking type="NetProfit"`, `StopCondition databank-full passedStrategies=1000` — esto **no es configuración propia de la tarea Filtering**, es residuo/herencia del contexto del proyecto al guardar el preset (coincide con los valores del Build). No confundir esto con ajustes reales de Filtering.
