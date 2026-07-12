@@ -88,20 +88,21 @@ Fuentes: [Call external script task](https://strategyquant.com/doc/strategyquant
 Pedido explícito del usuario: que el proyecto corra tarea a tarea dejando "simplemente los resultados más importantes al final". Con el catálogo completo, la secuencia concreta propuesta:
 
 ```
-Build
-  → SaveToFiles (guarda TODO el resultado en bruto del Build — ver justificación abajo, 2026-07-12)
-  → Filtering (filtro OOS nativo, sin código — descarta candidatas tipo 4.22.136, PF OOS < 1; ver sección 3d, corrección 2026-07-12)
+Build (motor genético, días)
+  → SaveToFiles #1: TODO en bruto, sin filtrar → Reversion-Media\_runs\<fecha>_corridaN\01_bruto_build\
+  → Filtering OOS (nativo, sin código; ver sección 3d/mecanismo-condiciones-filtrado.md) — no se exporta, barato de reconstruir
   → Retest (OOS sin solapar / mercado correlacionado, ver sección 1-3)
-  → Filtering (umbral post-Retest, más estricto)
-  → CreatePortfolio o AutomaticPortfolioBuilder (recién con varias candidatas ya limpias)
-  → SaveToFiles (persiste el resultado final a disco — esto es "lo importante al final")
-  → LogDatabankStats (deja registro del cierre de ciclo)
-  → Notification (avisa que terminó, sin que el usuario tenga que estar mirando)
-  → ClearDatabanks (limpia los databanks intermedios, no el resultado final ya guardado)
-  → GoToTask (vuelve a Build, opcional)
+  → SaveToFiles #2 (recomendado, no obligatorio: Retest es reproducible pero caro) → 03_retest_aprobadas\
+  → Filtering post-Retest (umbral más estricto, barato)
+  → CreatePortfolio/AutomaticPortfolioBuilder — de-duplicación de la plantilla, NO el portafolio final de despliegue (ver sección 3g)
+  → SaveToFiles #3: resultado final del pipeline → 04_portafolio_final\ — obligatorio, es el entregable real
+  → LogDatabankStats (checkpoint de cierre)
+  → Notification (avisa que terminó)
+  → ClearDatabanks (limpia databanks internos de SQ — seguro, ya está todo exportado)
+  → (sin GoToTask automático por defecto — ver sección 3f. Si el usuario decide correr todo de nuevo, es una acción deliberada suya, no un loop desatendido)
 ```
 
-**Estado (2026-07-08):** catálogo investigado y secuencia propuesta, **no implementada todavía** — se arma recién cuando haya suficientes candidatas limpias para justificar el pipeline completo (más que las 4 actuales, una de las cuales ya se descartó a mano por PF OOS<1).
+**Estado (2026-07-08, actualizado 2026-07-12):** catálogo investigado, secuencia validada en la práctica hasta `Filtering` (ver `mecanismo-condiciones-filtrado.md` — primer filtro corrido con éxito, 535/1000). Resto de la secuencia (Retest en adelante) todavía sin armar.
 
 ### Por qué el `SaveToFiles` inmediatamente después del Build es obligatorio, no opcional (2026-07-12)
 
@@ -111,7 +112,22 @@ El usuario preguntó, tras la primera corrida real de `EURUSD-REVRANGE-H1-001` (
 
 - **El resultado bruto del Build es irrecuperable si se pierde** — no hay forma de "correrlo de nuevo y obtener lo mismo".
 - **El resultado de `Filtering` es barato de reconstruir** — si hiciera falta, alcanza con volver a correr la misma tarea (condiciones ya documentadas en el `.cfx` del proyecto) contra el backup del Build ya guardado, en segundos.
-- Como el pipeline **hace loop** (`GoToTask` vuelve al Build), cada vuelta genera un lote nuevo y distinto de estrategias en bruto — si no se guarda cada lote antes de que la vuelta siguiente limpie el databank para la próxima tanda, ese lote se pierde para siempre, no solo la vez que no se guardó, sino en cada vuelta del ciclo.
+- **Corrección (2026-07-12):** el pipeline **no hace loop automático por defecto** (aclarado por el usuario — puede ser una corrida completa única, repetida solo si el usuario lo decide explícitamente más adelante, no un `GoToTask` desatendido). Aun así, el `SaveToFiles` del bruto sigue siendo obligatorio: cada corrida completa (sea la única o la enésima que el usuario decida disparar) genera un lote de estrategias distinto e irrepetible, y si no se guarda antes de `ClearDatabanks`, se pierde esa corrida específica para siempre.
+
+### 3g. Dónde viven físicamente los resultados del pipeline (decidido 2026-07-12)
+
+Separación clara entre **archivos de estrategias** (`.sqx`, binarios, no diffeables) y **metadatos/documentación** (texto, versionable):
+
+- **`D:\Ariel De Armas\Forex\EURUSD\Plantillas\Reversion-Media\_runs\<fecha>_corridaN\`** — única fuente real de los archivos `.sqx` de esa plantilla, en todas sus etapas exportadas (bruto, retest, final). Fuera de `D:\StrategyQuantoInstalado\` por completo (mismo motivo que el backup manual de las 1000: no depender de la integridad de la instalación de SQ). **No va a git** — sería peso muerto binario sin ningún beneficio de diff/historial. Protegido por **backup manual a otro disco, con la periodicidad que decida el usuario** (no automatizado dentro del pipeline).
+- **`SQX_Library` (git, `EURUSD/ReversionRango/`)** — se queda con lo que ya hace bien: reglas, changelog, catálogo, presets de tareas (`.cfx`/`.xml`, chicos y singulares por tipo de tarea), y el registro de metadatos por estrategia (`linaje_estrategias.json`, ver `trazabilidad-versionado-estrategias.md`) — apunta a la ruta real en `Reversion-Media`, no contiene el binario. `SQX_Library` en sí sigue viviendo físicamente dentro de la instalación (`D:\StrategyQuantoInstalado\user\SQX_Library\`), pero ya no importa: desde el 2026-07-12 tiene su propio respaldo real e independiente (repo Git privado en GitHub), que cumple el mismo rol de "no depender de la instalación" que backup manual afuera. Se descartó mover la carpeta.
+
+### 3h. La tarea "Portfolio" del pipeline NO es el portafolio final de despliegue (aclarado 2026-07-12)
+
+Todas las estrategias que sobreviven el pipeline de una plantilla comparten **la misma hipótesis, mismo activo, mismo timeframe** — es poco probable que tengan baja correlación entre sí (principio central de `proceso-portafolio.md`: la diversificación real depende de baja correlación, y variaciones del mismo patrón de reversión en EURUSD H1 tienden a reaccionar a las mismas condiciones de mercado al mismo tiempo).
+
+Por eso, `CreatePortfolio`/`AutomaticPortfolioBuilder` dentro del pipeline de **una sola plantilla** cumple un rol distinto al que su nombre sugiere: es un paso de **des-duplicación de la plantilla** (con tope de correlación, ej. 0.3 — mismo valor real visto en `PortfolioMaster`) que filtra variantes casi idénticas entre sí y deja un subconjunto más representativo de esa hipótesis puntual — **no** produce el portafolio diversificado listo para desplegar en real.
+
+**El portafolio real de despliegue se arma después, combinando resultados de varias plantillas distintas** (esta + una futura de ruptura + otra de otro activo, etc.) — proceso aparte, posterior, con `PortfolioMaster`/`PortfolioComposer`, ya documentado en `proceso-portafolio.md`. El pipeline de una plantilla individual entrega materia prima ya des-duplicada para ese proceso, no el resultado final.
 
 **Regla fija para toda plantilla futura:** `SaveToFiles` de la salida **completa y sin filtrar** del Build es un paso automático del pipeline, inmediatamente después del Build, en cada vuelta del loop — no una precaución manual de "primera plantilla". El nombre de carpeta/archivo de cada guardado debe distinguir la vuelta del loop (timestamp o contador), para no sobrescribir el lote de una vuelta anterior con el de la siguiente.
 
