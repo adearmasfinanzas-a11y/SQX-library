@@ -89,6 +89,7 @@ Pedido explícito del usuario: que el proyecto corra tarea a tarea dejando "simp
 
 ```
 Build
+  → SaveToFiles (guarda TODO el resultado en bruto del Build — ver justificación abajo, 2026-07-12)
   → Filtering (filtro OOS nativo, sin código — descarta candidatas tipo 4.22.136, PF OOS < 1; ver sección 3d, corrección 2026-07-12)
   → Retest (OOS sin solapar / mercado correlacionado, ver sección 1-3)
   → Filtering (umbral post-Retest, más estricto)
@@ -101,6 +102,18 @@ Build
 ```
 
 **Estado (2026-07-08):** catálogo investigado y secuencia propuesta, **no implementada todavía** — se arma recién cuando haya suficientes candidatas limpias para justificar el pipeline completo (más que las 4 actuales, una de las cuales ya se descartó a mano por PF OOS<1).
+
+### Por qué el `SaveToFiles` inmediatamente después del Build es obligatorio, no opcional (2026-07-12)
+
+El usuario preguntó, tras la primera corrida real de `EURUSD-REVRANGE-H1-001` (1000 estrategias, respaldadas manualmente porque era la primera plantilla en converger), si en plantillas futuras haría falta guardar el resultado completo del Build o alcanzaría con guardar solo lo que pasa el primer filtro.
+
+**Respuesta con razonamiento, no por costumbre:** el Build **no es reproducible determinísticamente** — es búsqueda genética con aleatoriedad, así que correrlo dos veces con la misma configuración exacta da conjuntos de estrategias distintos, no el mismo resultado. Esto es una diferencia real de fondo con `Filtering` (que sí es determinístico: mismas condiciones + mismo databank de entrada = mismo resultado, siempre). Por eso:
+
+- **El resultado bruto del Build es irrecuperable si se pierde** — no hay forma de "correrlo de nuevo y obtener lo mismo".
+- **El resultado de `Filtering` es barato de reconstruir** — si hiciera falta, alcanza con volver a correr la misma tarea (condiciones ya documentadas en el `.cfx` del proyecto) contra el backup del Build ya guardado, en segundos.
+- Como el pipeline **hace loop** (`GoToTask` vuelve al Build), cada vuelta genera un lote nuevo y distinto de estrategias en bruto — si no se guarda cada lote antes de que la vuelta siguiente limpie el databank para la próxima tanda, ese lote se pierde para siempre, no solo la vez que no se guardó, sino en cada vuelta del ciclo.
+
+**Regla fija para toda plantilla futura:** `SaveToFiles` de la salida **completa y sin filtrar** del Build es un paso automático del pipeline, inmediatamente después del Build, en cada vuelta del loop — no una precaución manual de "primera plantilla". El nombre de carpeta/archivo de cada guardado debe distinguir la vuelta del loop (timestamp o contador), para no sobrescribir el lote de una vuelta anterior con el de la siguiente.
 
 ## 3d. Preparación en profundidad de cada bloque (investigado 2026-07-11, antes de tener materia prima suficiente)
 
