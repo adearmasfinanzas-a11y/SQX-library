@@ -82,7 +82,8 @@ Existen **21 tipos de tarea reales** disponibles para un proyecto personalizado 
 | Tarea | Función |
 |---|---|
 | **Build** | Genera estrategias por evolución genética (la que ya usamos a fondo). |
-| **Retest** | Vuelve a testear estrategias existentes con otra configuración de datos/época. |
+| **Retest** ("Retest strategies" en interfaz) | Vuelve a testear estrategias existentes con **una única** configuración de datos/época — la que usamos para revalidar contra la ventana OOS reservada. |
+| **AutomaticRetest** ("Automatic retest" en interfaz, 2026-07-12) | Distinto de `Retest`, no una variante — decompilado `XmlChartCombinator`/`AutomaticRetestTask`: genera el **producto cartesiano** de combinaciones (varios símbolos × varias ventanas de fechas × varios escenarios de spread, etc.) y las corre todas en lote/paralelo (`GridClient`, `retestBatchSize`, `jobCount`). Pensado para estudios de sensibilidad/robustez a gran escala, no para una revalidación puntual — candidato interesante para más adelante (ej. sensibilidad contra varios pares FX correlacionados a la vez), no usado en esta etapa del pipeline. |
 | **Optimize** | Optimiza parámetros de estrategias ya existentes (automático/manual/fuerza bruta), con su propia sección de Rankings y Walk-Forward. |
 | **Filtering** | Filtra estrategias de un databank origen a un databank destino según condiciones, **sin volver a testear** — rápido, ideal para aplicar un umbral post-hoc. |
 | **CustomAnalysis** | Corre análisis a medida (por estrategia o sobre todo el databank), puede eliminar estrategias que fallan el análisis — la vía de escape para lógica propia que las condiciones nativas no cubren (ej. nuestro cálculo de Profit Factor OOS). |
