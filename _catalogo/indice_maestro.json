@@ -1,0 +1,24 @@
+{
+  "plantillas": [
+    {
+      "id": "EURUSD-REVRANGE-H1-001",
+      "id_anterior": "EURUSD-REVRANGE-M15-001",
+      "activo": "EURUSD",
+      "familia_activo": "FX_mayor_liquido",
+      "timeframe": "H1",
+      "motor": "MetaTrader5",
+      "hipotesis": "Reversión a la media en rango",
+      "familia_logica_capa2_3": "Exceso/agotamiento en rango",
+      "version_restrictiva": "pendiente_generacion",
+      "version_flexible": "pendiente_generacion",
+      "indicadores_usados": ["SqADX", "SqBollingerBands", "SqRSI"],
+      "regimen_historico_valido": "Últimos 8 años (recorte deliberado — datos más antiguos no representan el comportamiento actual del mercado, según el usuario)",
+      "ruta": "EURUSD\\ReversionRango\\",
+      "fecha_creacion": "2026-07-04",
+      "ultima_actualizacion": "2026-07-08",
+      "estado": "primera_convergencia_pendiente_revision_candidatas",
+      "nota_pivote": "M15 (7 corridas, 0 aceptadas) se pausó tras confirmar que toda la evidencia real disponible (2 estrategias propias + 4 proyectos de ejemplo oficiales) que converge es H1/M30, nunca M15. Se pivota a H1 para validar el pipeline completo por primera vez; después se reconsidera volver a M15 con esa experiencia. Carpeta del proyecto real renombrada de user/projects/EURUSD-REVRANGE-M15-001 a user/projects/EURUSD-REVRANGE-H1-001.",
+      "nota_primera_convergencia_2026-07-08": "Décima corrida real: 101.080 estrategias generadas, 4 aceptadas (0.52/hora, tiempo por aceptada 1h55min), tras relajar Profit Factor del Build a 1.1 y del Ranking a 1.5. Pendiente revisar las 4 candidatas en detalle antes de avanzar a Retest — ver changelog.md para el desglose completo."
+    }
+  ]
+}

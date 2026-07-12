@@ -1,0 +1,27 @@
+{
+  "language": "spanish",
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(**)",
+      "Edit(**)",
+      "Write(**)",
+      "Bash(dir:*)",
+      "Bash(mkdir:*)",
+      "Bash(Expand-Archive:*)",
+      "Bash(Compress-Archive:*)",
+      "Bash(unzip:*)",
+      "Bash(zip:*)",
+      "Bash(git:*)"
+    ],
+    "deny": [
+      "Read(../**)",
+      "Write(../**)",
+      "Edit(../**)",
+      "Bash(Remove-Item -Recurse -Force:*)",
+      "Bash(rm -rf:*)",
+      "Read(.env)",
+      "Read(.env.*)"
+    ]
+  }
+}

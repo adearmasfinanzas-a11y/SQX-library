@@ -1,0 +1,866 @@
+<title>SQX_Library — Informe de presentación</title>
+<style>
+  :root {
+    --ink-deep: #12181f;
+    --ink-panel: #1b2530;
+    --ink-panel-raised: #212c39;
+    --ink-line: #2a3542;
+    --text: #edeef0;
+    --text-soft: #a9b3bd;
+    --text-faint: #6d7885;
+    --gold: #c68a3d;
+    --gold-soft: rgba(198, 138, 61, 0.14);
+    --sage: #5fa88f;
+    --sage-soft: rgba(95, 168, 143, 0.14);
+    --rust: #b85c4a;
+    --rust-soft: rgba(184, 92, 74, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--ink-deep);
+    color: var(--text);
+    font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  a { color: var(--gold); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    font-size: 0.87em;
+    background: var(--ink-panel-raised);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    padding: 5.5rem 0 4rem;
+    border-bottom: 1px solid var(--ink-line);
+  }
+
+  .hero .kicker {
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.4rem;
+  }
+
+  .hero .kicker .v-badge {
+    border: 1px solid var(--gold);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    color: var(--gold);
+  }
+
+  .hero h1 {
+    font-size: 2.7rem;
+    line-height: 1.14;
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 0 0 1.1rem;
+    letter-spacing: -0.01em;
+  }
+
+  .hero .thesis {
+    font-size: 1.18rem;
+    color: var(--text-soft);
+    max-width: 60ch;
+    margin: 0 0 2.75rem;
+  }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--ink-line);
+    border-bottom: 1px solid var(--ink-line);
+  }
+
+  .stat {
+    padding: 1.1rem 1.25rem 1.1rem 0;
+    border-right: 1px solid var(--ink-line);
+  }
+  .stat:last-child { border-right: none; padding-right: 0; }
+
+  .stat .n {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 1.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    display: block;
+  }
+  .stat .l {
+    font-size: 0.74rem;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 0.3rem;
+  }
+
+  /* ---------- SECTIONS ---------- */
+  section {
+    padding: 4rem 0;
+    border-bottom: 1px solid var(--ink-line);
+  }
+
+  .s-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .s-num {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--gold);
+  }
+
+  h2 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: -0.005em;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 2rem 0 0.8rem;
+  }
+
+  p { margin: 0 0 1.05rem; max-width: 66ch; }
+  p.wide { max-width: none; }
+
+  .lede {
+    font-size: 1.06rem;
+    color: var(--text-soft);
+    max-width: 62ch;
+  }
+
+  ul, ol { padding-left: 1.3rem; max-width: 64ch; }
+  li { margin-bottom: 0.55rem; }
+
+  /* callout blocks */
+  .callout {
+    border-left: 3px solid var(--gold);
+    background: var(--gold-soft);
+    padding: 1rem 1.3rem;
+    border-radius: 0 4px 4px 0;
+    margin: 1.5rem 0;
+  }
+  .callout.good { border-color: var(--sage); background: var(--sage-soft); }
+  .callout.warn { border-color: var(--rust); background: var(--rust-soft); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .ctag {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+  .callout.good .ctag { color: var(--sage); }
+  .callout.warn .ctag { color: var(--rust); }
+
+  /* comparison table */
+  .table-scroll { overflow-x: auto; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--ink-line); vertical-align: top; }
+  th { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 500; }
+  td.hl { color: var(--sage); }
+
+  /* timeline / lab notebook */
+  .timeline { margin: 1.5rem 0; }
+  .tl-entry {
+    display: grid;
+    grid-template-columns: 92px 1fr;
+    gap: 1.1rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--ink-line);
+  }
+  .tl-entry:first-child { border-top: none; }
+  .tl-date {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    padding-top: 0.15rem;
+  }
+  .tl-body p { margin: 0 0 0.5rem; font-size: 0.96rem; }
+  .tl-body .tl-tag {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.1rem 0.45rem;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 0.4rem;
+  }
+  .tl-tag.err { background: var(--rust-soft); color: var(--rust); }
+  .tl-tag.fix { background: var(--sage-soft); color: var(--sage); }
+  .tl-tag.pivot { background: var(--gold-soft); color: var(--gold); }
+
+  /* capability grid */
+  .cap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--ink-line);
+    border: 1px solid var(--ink-line);
+    margin: 1.5rem 0;
+  }
+  .cap-col { background: var(--ink-panel); padding: 1.4rem 1.5rem; }
+  .cap-col h4 {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 1rem;
+  }
+  .cap-col.yes h4 { color: var(--sage); }
+  .cap-col.no h4 { color: var(--rust); }
+  .cap-col ul { margin: 0; padding-left: 1.1rem; max-width: none; }
+  .cap-col li { font-size: 0.93rem; margin-bottom: 0.6rem; }
+
+  /* vision cards */
+  .vision-card {
+    padding: 1.4rem 1.5rem;
+    background: var(--ink-panel);
+    border: 1px solid var(--ink-line);
+    border-radius: 4px;
+    margin-bottom: 1.1rem;
+  }
+  .vision-card h4 { margin: 0 0 0.5rem; font-size: 1.02rem; }
+  .vision-card .risk {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.12rem 0.5rem;
+    border-radius: 2px;
+    float: right;
+  }
+  .risk.low { background: var(--sage-soft); color: var(--sage); }
+  .risk.med { background: var(--gold-soft); color: var(--gold); }
+  .risk.high { background: var(--rust-soft); color: var(--rust); }
+  .vision-card p { margin: 0; font-size: 0.94rem; color: var(--text-soft); }
+
+  /* ---------- COVER BANNER ---------- */
+  .cover-banner {
+    position: relative;
+    border-bottom: 1px solid var(--ink-line);
+    background: linear-gradient(180deg, #0d1218 0%, var(--ink-deep) 100%);
+    overflow: hidden;
+  }
+  .cover-banner canvas { display: block; width: 100%; height: 220px; }
+  .cover-caption {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    padding: 0 1.5rem;
+  }
+  .cover-caption .org-name {
+    font-size: 0.9rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text);
+    text-shadow: 0 2px 20px rgba(0,0,0,0.65);
+    min-height: 1.3em;
+  }
+  .cover-caption .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    background: var(--gold);
+    margin-left: 2px;
+    vertical-align: -0.1em;
+    animation: blink 1s step-end infinite;
+  }
+  .cover-caption .org-sub {
+    margin-top: 0.65rem;
+    font-family: "Iowan Old Style", Georgia, serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--text-soft);
+    opacity: 0;
+    transition: opacity 0.9s ease;
+  }
+  .cover-caption .org-sub.show { opacity: 1; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .cover-caption .cursor { animation: none; opacity: 0; }
+  }
+
+  /* ---------- SIDE TOC ---------- */
+  .side-toc {
+    position: fixed;
+    top: 7rem;
+    left: 2.25rem;
+    width: 180px;
+    display: none;
+  }
+  @media (min-width: 1320px) { .side-toc { display: block; } }
+  .side-toc .toc-label {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 0.85rem;
+  }
+  .side-toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--ink-line); max-width: none; }
+  .side-toc li { margin-bottom: 0; }
+  .side-toc a {
+    display: block;
+    padding: 0.4rem 0 0.4rem 0.9rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .side-toc a .tnum {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.66rem;
+    color: var(--text-faint);
+    margin-right: 0.5rem;
+  }
+  .side-toc a:hover, .side-toc a:focus-visible { color: var(--text); border-left-color: var(--text-faint); }
+  .side-toc a.active { color: var(--gold); border-left-color: var(--gold); }
+  .side-toc a.active .tnum { color: var(--gold); }
+
+  /* responsibility box */
+  .responsibility {
+    border: 1px solid var(--rust);
+    background: var(--rust-soft);
+    padding: 1.75rem 1.9rem;
+    border-radius: 6px;
+    margin: 1.5rem 0;
+  }
+  .responsibility .rtag {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--rust);
+    margin-bottom: 0.9rem;
+    display: block;
+  }
+  .responsibility p { color: var(--text); }
+
+  footer.doc-foot {
+    padding: 3rem 0 5rem;
+  }
+  footer.doc-foot .mono {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 1.95rem; }
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(2) { border-right: none; }
+    .cap-grid { grid-template-columns: 1fr; }
+    .tl-entry { grid-template-columns: 1fr; gap: 0.3rem; }
+  }
+</style>
+
+<div class="cover-banner" id="top">
+  <canvas id="cover-canvas" aria-hidden="true"></canvas>
+  <div class="cover-caption">
+    <div class="org-name mono" aria-live="polite"><span id="org-name-text"></span><span class="cursor"></span></div>
+    <div class="org-sub" id="org-sub">Motor de hipótesis → fábrica de estrategias validadas</div>
+  </div>
+</div>
+
+<nav class="side-toc" aria-label="Contenido del informe">
+  <div class="toc-label">En este informe</div>
+  <ol>
+    <li><a href="#top"><span class="tnum">00</span>Portada</a></li>
+    <li><a href="#idea"><span class="tnum">01</span>La idea</a></li>
+    <li><a href="#ventajas"><span class="tnum">02</span>Por qué este enfoque</a></li>
+    <li><a href="#tecnico"><span class="tnum">03</span>Aprendizaje técnico</a></li>
+    <li><a href="#camino"><span class="tnum">04</span>Cronología honesta</a></li>
+    <li><a href="#pipeline"><span class="tnum">05</span>El pipeline</a></li>
+    <li><a href="#capacidades"><span class="tnum">06</span>Capacidades reales</a></li>
+    <li><a href="#riesgo"><span class="tnum">07</span>Qué puede salir mal</a></li>
+    <li><a href="#futuro"><span class="tnum">08</span>Visión a futuro</a></li>
+    <li><a href="#valor"><span class="tnum">09</span>Valor comercial</a></li>
+    <li><a href="#responsabilidad"><span class="tnum">10</span>Límites de la IA</a></li>
+    <li><a href="#estado"><span class="tnum">11</span>Estado actual</a></li>
+  </ol>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="kicker"><span class="v-badge">v3 · con portada y navegación</span><span>SQX_Library · 2026-07-09</span></div>
+    <h1>Una fábrica de espacios de búsqueda, no una colección de estrategias.</h1>
+    <p class="thesis">Este informe explica qué estamos construyendo con StrategyQuant X, cómo lo estamos haciendo, qué aprendimos en el camino — con los errores incluidos — y hacia dónde apunta esto si sigue funcionando. Escrito para quien conoce trading pero no StrategyQuant.</p>
+    <div class="stat-strip">
+      <div class="stat"><span class="n mono">300</span><span class="l">estrategias en el databank actual</span></div>
+      <div class="stat"><span class="n mono">21</span><span class="l">tipos de tarea catalogados</span></div>
+      <div class="stat"><span class="n mono">1</span><span class="l">plantilla activa (EURUSD H1)</span></div>
+      <div class="stat"><span class="n mono">0</span><span class="l">capital real desplegado</span></div>
+    </div>
+  </div>
+</div>
+
+<section id="idea">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">01</span><h2>La idea</h2></div>
+    <p class="lede">StrategyQuant X puede generar estrategias de trading por evolución genética: prueba millones de combinaciones de indicadores y reglas contra datos históricos, y se queda con las que superan ciertos filtros. Usado sin dirección, es una escopeta — dispara en todas direcciones esperando encontrar algo. Este proyecto existe para no operar así.</p>
+    <p>La propuesta es simple de enunciar y difícil de ejecutar bien: en vez de dejar que el motor busque a ciegas sobre un catálogo abierto de 158 indicadores, cada plantilla parte de una <strong>hipótesis de mercado concreta</strong> — una ineficiencia específica, en un activo específico, justificada antes de tocar el Builder. La genética conserva su trabajo (encontrar la combinación de parámetros y estructura que mejor explota esa hipótesis), pero dentro de un terreno acotado con criterio, no en un campo abierto.</p>
+    <div class="callout">
+      <span class="ctag">el rol del asistente de IA en esto</span>
+      <p>El asistente de IA que trabaja en este proyecto no diseña la estrategia final — diseña el <strong>espacio de búsqueda</strong> que el motor explora: qué indicadores tienen sentido para esa hipótesis, qué estructura de reglas, qué criterios de aceptación son razonables. Funciona como un miembro más del equipo de desarrollo, con una función específica y acotada. La validación real de si la hipótesis funciona la hace StrategyQuant con datos, no el razonamiento del asistente. Esa distinción ordena todo lo que sigue.</p>
+    </div>
+  </div>
+</section>
+
+<section id="ventajas">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">02</span><h2>Por qué este enfoque, y no otro</h2></div>
+    <p class="lede">Hay al menos cuatro formas habituales de acercarse al trading algorítmico. Ninguna es ilegítima; cada una paga un costo distinto.</p>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Enfoque</th><th>Qué gana</th><th>Qué pierde</th></tr>
+        <tr><td>Discrecional / manual</td><td>Flexibilidad, intuición de contexto</td><td>No escala, no es reproducible, sesgos cognitivos sin control</td></tr>
+        <tr><td>Señales o copy-trading</td><td>Cero curva de aprendizaje técnica</td><td>Cero visibilidad de por qué funciona o deja de funcionar</td></tr>
+        <tr><td>Codear el EA a mano</td><td>Control total del código</td><td>Un ciclo de prueba de idea muy lento; sin motor de búsqueda ni Monte Carlo integrado</td></tr>
+        <tr><td>Builder genético sin hipótesis</td><td>Explora rápido, encuentra cosas raras</td><td>Alto riesgo de sobreajuste; resultados difíciles de explicar o confiar</td></tr>
+        <tr><td class="hl">Plantillas dirigidas (este proyecto)</td><td class="hl">Búsqueda rápida <em>y</em> explicable; negativo documentado, no descartado</td><td class="hl">Exige disciplina de diseño antes de cada corrida — no es instantáneo</td></tr>
+      </table>
+    </div>
+    <p>La ventaja concreta no es velocidad pura — de hecho, acotar el espacio de búsqueda con building blocks limitados puede volver <em>más lenta</em> cada corrida individual (lo vivimos: bajar el pool a 3 indicadores en vez del catálogo completo). La ventaja real es que <strong>cada resultado, positivo o negativo, es interpretable</strong> — sabemos qué hipótesis se probó, por qué, y qué se aprendió, incluso cuando la respuesta es "esto no funciona aquí".</p>
+  </div>
+</section>
+
+<section id="tecnico">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">03</span><h2>Lo que aprendimos de verdad sobre StrategyQuant</h2></div>
+    <p class="lede">Nada de esto vino de la documentación sola — se verificó contra el motor real, muchas veces corrigiendo una suposición inicial equivocada.</p>
+    <h3>Full Builder, no AlgoWizard</h3>
+    <p>AlgoWizard (el asistente simplificado) cubre menos del 5% del catálogo real de indicadores. El Full Builder da acceso a los 158 elementos verificados vía <code>talibs.xml</code>: 70 indicadores, 61 patrones de velas, 23 funciones, 4 tipos de precio — de ahí sale el material real con el que diseñar una hipótesis.</p>
+    <h3>Building Blocks: todo es un interruptor</h3>
+    <p>Cada indicador, cada comparador, cada nivel de Stop/Limit es un bloque individual con <code>use="true/false"</code>. Esto permite acotar el espacio de búsqueda con precisión quirúrgica — y también permite romperlo por accidente: en un momento desactivamos casi toda la categoría de niveles de precio pensando que solo afectaba al Stop/Take Profit, y rompimos la construcción del precio de entrada a Límite. StrategyQuant avisó con un error claro; lo corregimos reactivando las referencias básicas (Ask/Bid/Open/High/Low/Close) sin reabrir los niveles basados en indicador.</p>
+    <h3>testPrecision: la variable que más costó entender</h3>
+    <p>Cuatro niveles de precisión de backtest, desde "solo O/H/L/C de la barra" (rápido, pero documentado como insuficiente para órdenes Stop/Limit) hasta datos de tick real. Subimos la precisión pensando que resolvería el problema de "operaciones que cierran en la misma barra" — y el problema <em>empeoró</em>. La causa real resultó ser el multiplicador de ATR del Stop/Take Profit, demasiado angosto para el tamaño real de las velas. Lección aplicada más tarde con más criterio: <code>RetestWithHigherPrecision</code> ya viene activo como cross-check independiente — permite correr el grueso de la búsqueda en precisión rápida y verificar solo a los finalistas en precisión alta, sin perder la protección. Ese único ajuste multiplicó la velocidad de convergencia entre 9 y 14 veces.</p>
+    <h3>El sistema de aceptación es de dos pisos</h3>
+    <p>Una cosa es el filtro del Build (grueso, permite que el motor siga generando) y otra el de Rankings (más estricto, decide qué queda realmente en el databank). Descubrimos tarde — y de la peor manera, con datos reales — que <strong>ninguno de los dos pisos comprueba el rendimiento específicamente en el período fuera de muestra (OOS)</strong>. Eso permitió que una candidata con excelente aspecto en muestra (Profit Factor 1.96) resultara perdedora en el período no visto (Profit Factor 0.96). El Build, por diseño, no protege contra esto solo — hace falta un filtro propio.</p>
+    <h3>Herramientas de línea de comandos</h3>
+    <p><code>sqcli.exe</code> permite exportar las operaciones reales de cualquier estrategia a CSV (<code>-tools action=orderstocsv</code>) — así calculamos con datos crudos, no con lo que muestra la interfaz, el Profit Factor separado por muestra IS/OOS de cada candidata. Es la base del filtro de calidad que aplicamos manualmente hasta ahora, y el que planeamos automatizar en el pipeline.</p>
+  </div>
+</section>
+
+<section id="camino">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">04</span><h2>El camino real — cronología honesta</h2></div>
+    <p class="lede">Trece corridas reales antes de la primera estrategia aceptada. Ninguna se oculta.</p>
+    <div class="timeline">
+      <div class="tl-entry">
+        <div class="tl-date mono">Corrida 1</div>
+        <div class="tl-body">
+          <span class="tl-tag err">error propio</span>
+          <p>Se diagnosticó comparando contra el archivo de configuración equivocado (un proyecto viejo sin relación). Autocorregido al re-verificar contra el archivo real.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corridas 1-2</div>
+        <div class="tl-body">
+          <span class="tl-tag err">hallazgo real</span>
+          <p>El Build corría sobre GBPUSD/MetaTrader4 en vez de EURUSD/MetaTrader5 — un desvío de configuración que invalidaba toda la evidencia previa sobre la hipótesis.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corridas 3-4</div>
+        <div class="tl-body">
+          <span class="tl-tag fix">ajuste parcial</span>
+          <p>Relajar el mínimo de condiciones de entrada mejoró la tasa de "sin transacciones" pero no resolvió el problema de fondo.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corridas 5-6</div>
+        <div class="tl-body">
+          <span class="tl-tag err">hipótesis descartada</span>
+          <p>Restringir los bloques de Stop/Loss a solo ATR no se confirmó como solución — y rompió temporalmente la construcción de la orden de entrada (ver sección anterior).</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corrida 7</div>
+        <div class="tl-body">
+          <span class="tl-tag pivot">pivote de fondo</span>
+          <p>Ensanchar el Stop/Take Profit resolvió el cierre-en-la-misma-barra, pero disparó el rechazo por Profit Factor al 57% — el objetivo de ganancia amplio no encajaba con reversión en rango en M15. Se pivotó la plantilla completa a H1, manteniendo la hipótesis intacta.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corridas 8-10</div>
+        <div class="tl-body">
+          <span class="tl-tag fix">primera convergencia</span>
+          <p>Relajar el Profit Factor del Build (1.3→1.1) y del Ranking (2.0→1.5), con criterio justificado por evidencia acumulada, produjo las primeras 4 estrategias aceptadas — tras nueve corridas en cero.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corrida 11</div>
+        <div class="tl-body">
+          <span class="tl-tag err">hallazgo de calidad</span>
+          <p>Al calcular a mano el Profit Factor en el período OOS, una de las cuatro candidatas resultó perdedora fuera de muestra a pesar de haber pasado todos los filtros del Build.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corrida 12</div>
+        <div class="tl-body">
+          <span class="tl-tag pivot">experimento ambiguo</span>
+          <p>Agregar Stochastic al pool de indicadores subió la tasa de aceptación (0.52→0.79/hora) pero también el tiempo total — resultado no concluyente por sí solo.</p>
+        </div>
+      </div>
+      <div class="tl-entry">
+        <div class="tl-date mono">Corrida 13 (en curso)</div>
+        <div class="tl-body">
+          <span class="tl-tag fix">el ajuste que sí funcionó</span>
+          <p>Bajar <code>testPrecision</code> a 1 en la búsqueda masiva, confiando en el cross-check de alta precisión ya activo para verificar solo a los finalistas: la tasa de convergencia subió de ~0.5-0.8 a más de 15 aceptadas por hora.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pipeline">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">05</span><h2>El pipeline completo que queremos montar</h2></div>
+    <p class="lede">StrategyQuant soporta 21 tipos de tarea encadenables en un proyecto que corre solo. Catalogamos los 21 contra sus archivos de configuración reales, no solo por nombre.</p>
+    <p>La secuencia propuesta para esta plantilla, una vez que haya suficientes candidatas limpias, sigue un principio simple: <strong>filtro barato primero, validación cara después</strong>.</p>
+    <div class="callout good">
+      <span class="ctag">secuencia propuesta</span>
+      <p class="mono" style="font-size:0.86rem; line-height:1.9;">Build → Filtering → CustomAnalysis (filtro de Profit Factor OOS) → Retest (OOS sin solapar / mercado correlacionado) → Filtering → Portafolio → SaveToFiles → LogDatabankStats → Notification → ClearDatabanks → GoToTask (loop)</p>
+    </div>
+    <p>Cada eslabón barato elimina candidatas antes de que lleguen al siguiente paso, más costoso. El objetivo declarado para este pipeline fue explícito: que el proyecto corra solo, tarea a tarea, dejando <em>únicamente los resultados importantes</em> al final — no miles de estrategias intermedias para revisar a mano.</p>
+
+    <h3>Lo que significa "totalmente automatizado", paso a paso</h3>
+    <p>La idea de fondo no es solo encadenar tareas — es que <strong>cada bloque de la cadena prueba algo distinto, con un filtro diseñado a medida de esa plantilla específica, no copiado de otra</strong>. Un pipeline genérico que aplica los mismos umbrales a cualquier hipótesis no es mejor que no tener pipeline — la disciplina está en que cada paso responda una pregunta concreta sobre <em>esta</em> hipótesis, en <em>este</em> activo:</p>
+    <ul>
+      <li><strong>Build</strong> — explora el espacio de búsqueda ya acotado a la hipótesis (los indicadores y estructuras que tienen sentido lógico para ella, no el catálogo completo) y aplica el primer filtro, calibrado con la evidencia propia de esa plantilla (no un Profit Factor "estándar de biblioteca").</li>
+      <li><strong>Filtering</strong> — un peine barato, sin re-testear nada, con el umbral de descarte que la evidencia acumulada de esa plantilla en particular indicó como razonable — no un corte arbitrario.</li>
+      <li><strong>CustomAnalysis</strong> — el filtro de Profit Factor fuera de muestra, calculado con la misma metodología para todas las plantillas, pero aplicado sobre el rango de fechas OOS que cada plantilla definió según su propio activo (los regímenes históricos de EURUSD no son los de GBPJPY ni los de un índice).</li>
+      <li><strong>Retest</strong> — prueba lo que sobrevivió en condiciones que esa plantilla en particular necesita validar: mercado correlacionado si la hipótesis depende de una dinámica de sesión FX, mayor precisión si opera con órdenes Límite/Stop sensibles al orden intrabarra, sensibilidad a slippage si el volumen esperado es alto.</li>
+      <li><strong>Portafolio</strong> — combina solo lo que ya pasó todo lo anterior, con el criterio de correlación que corresponde a la familia de activos de esa plantilla, no una regla universal.</li>
+      <li><strong>SaveToFiles / Log / Notification / ClearDatabanks / GoToTask</strong> — el cierre de ciclo: persiste lo importante, deja constancia, avisa, limpia lo intermedio, y si corresponde vuelve a empezar solo.</li>
+    </ul>
+    <p>Este mismo esqueleto de 21 tareas sirve para cualquier plantilla nueva que se agregue a la biblioteca — lo que cambia entre una y otra no es la secuencia de bloques, sino los <strong>filtros y rangos calibrados a medida</strong> dentro de cada bloque. Es la diferencia entre un pipeline reutilizable de verdad y un script genérico que se limita a copiar-pegar los mismos números para cualquier activo.</p>
+    <p><strong>Estado real:</strong> catalogado y diseñado, no ensamblado todavía. Se arma recién cuando haya suficientes candidatas que ya pasaron el filtro de OOS como para justificar el resto de la cadena.</p>
+  </div>
+</section>
+
+<section id="capacidades">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">06</span><h2>Qué puede hacer el asistente de IA acá, en concreto</h2></div>
+    <p class="lede">Sin idealizar. Esto es lo que se hizo de verdad, y lo que deliberadamente no se hizo.</p>
+    <div class="cap-grid">
+      <div class="cap-col yes">
+        <h4>Hecho y verificado</h4>
+        <ul>
+          <li>Editar configuración XML de proyectos reales (indicadores, SL/PT, criterios de aceptación), siempre con respaldo previo y verificación posterior por re-extracción del archivo</li>
+          <li>Extraer estadísticas reales de operaciones vía <code>sqcli</code> y calcularlas a mano (Profit Factor IS/OOS, drawdown) cuando la interfaz no las expone directo</li>
+          <li>Investigar en documentación oficial y foros para confirmar mecánicas antes de actuar, no asumir</li>
+          <li>Programar 2 indicadores nuevos en Java siguiendo el patrón exacto de los indicadores nativos</li>
+          <li>Diagnosticar causas de rechazo de estrategias leyendo logs reales, corrigiendo hipótesis propias cuando la evidencia las refutaba</li>
+        </ul>
+      </div>
+      <div class="cap-col no">
+        <h4>Deliberadamente no hecho</h4>
+        <ul>
+          <li>Instalar software por cuenta propia — se investiga y se recomienda, la instalación la ejecuta el usuario</li>
+          <li>Adivinar un valor interno de configuración no verificable (ej. un código de "solo OOS" no confirmado) y aplicarlo igual</li>
+          <li>Ver la interfaz gráfica directamente — se depende del usuario para el estado visual en tiempo real</li>
+          <li>Aplicar un ajuste de parámetros en una cuenta real basado solo en mi propio análisis, sin pasar de nuevo por el proceso de validación de StrategyQuant</li>
+          <li>Forzar un resultado relajando criterios de aceptación sin evidencia que lo justifique, solo para "tener algo que mostrar"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="riesgo">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">07</span><h2>Lo que puede salir mal</h2></div>
+    <p class="lede">Esto es investigación real, con una posibilidad real de resultado nulo. No se presenta como garantizado.</p>
+    <p>Que una plantilla converja (produzca estrategias aceptadas) no significa que la hipótesis tenga ventaja real — ya vimos un caso concreto de una candidata que pasó todos los filtros del Build y perdió dinero en el período no visto. El criterio que adoptamos para decidir si una hipótesis se sostiene o se descarta:</p>
+    <ul>
+      <li>Un solo resultado débil no alcanza para concluir nada — puede ser un problema de calibración, no de la hipótesis.</li>
+      <li>Un patrón consistente de deterioro entre muestra y fuera de muestra, repetido en múltiples corridas independientes, sí es evidencia real de que no hay ventaja explotable.</li>
+      <li>Cuando eso pasa, se documenta como fracaso con el mismo rigor que un éxito — no se oculta ni se fuerza un resultado bajando los criterios sin justificación nueva.</li>
+    </ul>
+    <div class="callout warn">
+      <span class="ctag">honestidad sobre el enfoque</span>
+      <p>Si la evidencia acumulada indica que este activo, este timeframe o esta hipótesis específica no tienen ventaja real, el paso correcto es cambiar de enfoque — otro activo, otra hipótesis, otro timeframe — no insistir en el mismo camino esperando un resultado distinto.</p>
+    </div>
+  </div>
+</section>
+
+<section id="futuro">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">08</span><h2>Visión a futuro</h2></div>
+    <p class="lede">Todo esto es la base para un flujo de trading automatizado en distintos niveles, con capitalización sostenida como objetivo de fondo — no una plantilla suelta. Nada de lo siguiente se implementa antes de tener al menos una plantilla realmente validada.</p>
+
+    <div class="vision-card">
+      <span class="risk med">riesgo moderado</span>
+      <h4>Bot supervisor de portafolio</h4>
+      <p>Un EA maestro que monitorea varias sub-estrategias por magic number y aplica reglas a nivel portafolio (ej. apagar todo si el drawdown agregado supera un umbral). Patrón conocido y bien entendido en la comunidad de MetaTrader.</p>
+    </div>
+    <div class="vision-card">
+      <span class="risk low">riesgo bajo</span>
+      <h4>Plataforma remota de monitoreo y gestión</h4>
+      <p>Un dashboard web que centraliza el estado de todas las cuentas/estrategias en vivo. Es solo visualización, no toca dinero directamente — buen candidato a proyecto concreto en cuanto haya algo real que monitorear.</p>
+    </div>
+    <div class="vision-card">
+      <span class="risk high">riesgo alto — requiere portón de validación</span>
+      <h4>Optimización asistida por IA sobre datos en tiempo real</h4>
+      <p>Exportar resultados en vivo, analizarlos, y sugerir ajustes de parámetros. Es la pieza de mayor riesgo de toda la visión: un ajuste sugerido por análisis de IA sobre datos en vivo es una hipótesis, no algo validado. Ver la sección siguiente — esta pieza no se implementa sin un mecanismo de validación obligatorio de por medio.</p>
+    </div>
+    <div class="vision-card">
+      <span class="risk med">riesgo moderado, de ingeniería</span>
+      <h4>Estrategia externa vía API (ej. Python + MetaTrader5)</h4>
+      <p>Leer datos y gestionar órdenes sin código MQL nativo, corriendo fuera de la terminal. Real y viable, pero exige manejo serio de reconexión y errores — la terminal debe permanecer conectada y cualquier fallo ahí toca dinero real.</p>
+    </div>
+  </div>
+</section>
+
+<section id="valor">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">09</span><h2>Valor comercial — con honestidad, no con promesas</h2></div>
+    <p class="lede">Si esto se llegara a comercializar algún día, lo que se vendería no es un bot ni una caja negra — es una <strong>fábrica</strong>: un proceso documentado, calibrado y repetible para producir sistemas de trading con evidencia estadística real detrás, a nivel de estrategia individual o de portafolio completo.</p>
+    <p>El mercado de bots de trading está lleno de productos que se venden por su curva de equity bonita, sin mostrar nunca cómo se construyó esa curva, qué pasó fuera de muestra, o qué tan sensible es a pequeños cambios de parámetros. La diferencia real de este enfoque no es prometer más rentabilidad — nadie puede prometer eso de buena fe en mercados financieros, y este informe no lo hace — la diferencia es que <strong>cada afirmación tiene detrás un método verificable</strong>: qué se probó, con qué datos, con qué filtros, qué falló y por qué se descartó.</p>
+    <div class="callout warn">
+      <span class="ctag">lo que no se promete</span>
+      <p>Ninguna cantidad de backtest, Monte Carlo u optimización elimina la incertidumbre real del mercado. Un resultado histórico sólido es evidencia de que una lógica tuvo sentido en el pasado con la evidencia disponible — no una garantía de rendimiento futuro. Quien venda certeza está vendiendo lo mismo que un bot sin evidencia, con mejor marketing.</p>
+    </div>
+    <p>Lo que sí es honesto afirmar: un proyecto que documenta sus fracasos con el mismo rigor que sus éxitos, que separa muestra de fuera de muestra antes de aceptar cualquier resultado, y que deja un mapa completo y auditable de cómo se llegó a cada estrategia — no es perfecto, pero es <strong>estructuralmente distinto</strong> de vender una caja negra sin respaldo. Ese mapa (las fichas de diseño, el catálogo, los changelogs, el criterio de descarte) es tan parte del producto como las estrategias mismas — es lo que permite a un tercero auditar, adaptar o personalizar el sistema en vez de solo confiar a ciegas.</p>
+    <h3>Una estimación honesta del valor, no una cifra inventada</h3>
+    <p>No es responsable poner un número de venta concreto sobre algo que todavía no completó su ciclo de validación en vivo — sería exactamente el tipo de promesa sin respaldo que este proyecto busca evitar. Lo que sí se puede decir con criterio:</p>
+    <ul>
+      <li>El valor no está en una sola estrategia — está en tener <strong>decenas de modelos</strong> ya optimizados y respaldados por estadística, de familias de hipótesis distintas, listos para combinarse en portafolios de baja correlación. Un portafolio así vale estructuralmente más que la suma de sus partes, por el mismo principio de diversificación ya documentado en este proyecto.</li>
+      <li>El diferencial comercial real frente a "vender un bot" es la <strong>trazabilidad completa</strong>: un comprador o socio puede pedir ver exactamente qué se probó y por qué se aceptó o descartó cada componente — algo que casi ningún vendedor de bots ofrece hoy.</li>
+      <li>La validación en vivo (corroborar los resultados de StrategyQuant contra simulaciones reales en plataformas como MT5, antes de cualquier despliegue con capital) es la pieza que todavía falta y que es condición necesaria antes de que cualquier estimación de valor deje de ser hipotética.</li>
+    </ul>
+    <p>En síntesis: el valor potencial es real y crece con cada modelo validado que se suma a la biblioteca — pero se construye con evidencia acumulada, no se declara por adelantado.</p>
+  </div>
+</section>
+
+<section id="responsabilidad">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">10</span><h2>Responsabilidad y límites de la IA en este proyecto</h2></div>
+    <p class="lede">Esta sección no es letra chica — es una regla de diseño que ya gobierna el proyecto.</p>
+    <div class="responsibility">
+      <span class="rtag mono">portón de validación obligatorio</span>
+      <p><strong>Ningún ajuste de parámetros sugerido por análisis de un modelo de lenguaje se aplica directo sobre una cuenta con capital real.</strong> El rol de la IA en este proyecto es generar hipótesis y diseñar el espacio de búsqueda — la validación de si una hipótesis funciona la hace siempre el proceso empírico de StrategyQuant (backtest, Monte Carlo, Walk-Forward, Retest fuera de muestra), nunca el razonamiento del modelo por sí solo.</p>
+      <p>Esto no es una precaución teórica: en esta misma sesión de trabajo, más de una hipótesis propia resultó equivocada al contrastarla con datos reales (la corrección de <code>testPrecision</code> que no funcionó como se predijo es el ejemplo más claro). Un modelo de lenguaje razona con buena información y aun así se equivoca frente a la evidencia empírica — por eso ninguna decisión que mueva dinero real se toma sin pasar antes por la validación del motor.</p>
+      <p>Cualquier pieza futura de "retroalimentación con IA" (sección anterior) se diseña con este portón como requisito de entrada, no como una mejora posterior — si algún día se construye sin él, es una desviación del diseño original de este proyecto, no una evolución natural.</p>
+    </div>
+  </div>
+</section>
+
+<section id="estado" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="s-head"><span class="s-num mono">11</span><h2>Estado actual</h2></div>
+    <p class="lede">Al momento de escribir esto:</p>
+    <ul>
+      <li>Una plantilla activa: <code>EURUSD-REVRANGE-H1-001</code> (reversión a la media en rango, H1, MetaTrader5).</li>
+      <li>13 candidatas ya evaluadas de corridas anteriores, con Profit Factor fuera de muestra calculado a mano para cada una; las que no llegan a 1.0 quedan documentadas como descartadas, no eliminadas.</li>
+      <li><strong>300 estrategias acumuladas en el databank de la corrida en curso</strong>, con la calibración de velocidad más reciente, avanzando hacia el tope configurado de 1000 — sin capital real involucrado en ningún momento.</li>
+      <li>El pipeline de validación completo (Retest, robustez, portafolio) está diseñado pero no ensamblado — es el siguiente paso una vez que haya suficientes candidatas limpias.</li>
+      <li>Ningún despliegue en vivo, ninguna cuenta real conectada, ninguna pieza de la visión a futuro implementada todavía.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="doc-foot">
+  <div class="wrap">
+    <div class="mono">
+      <span>SQX_Library — informe de presentación, v2 actualizado</span>
+      <span>Actualizado 2026-07-09 · referencia interna: <code>_estado/estado_proyecto.md</code></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- banner de texto animado (JS, sin librerías externas) ---- */
+  var orgText = "GRUPO DE DESARROLLO DE SOFTWARE Y TRADING ALGORÍTMICO";
+  var target = document.getElementById('org-name-text');
+  var sub = document.getElementById('org-sub');
+  if (target) {
+    if (reduceMotion) {
+      target.textContent = orgText;
+      if (sub) sub.classList.add('show');
+    } else {
+      var i = 0;
+      (function type() {
+        if (i <= orgText.length) {
+          target.textContent = orgText.slice(0, i);
+          i++;
+          setTimeout(type, 42);
+        } else if (sub) {
+          sub.classList.add('show');
+        }
+      })();
+    }
+  }
+
+  /* ---- canvas generativo: motor de hipótesis -> fábrica de bots ---- */
+  var canvas = document.getElementById('cover-canvas');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W, H, engineX, engineY, factoryX, factoryY;
+  var cols = 4, rows = 3, cellSize = 15, cellGap = 9;
+  var factoryLit = new Array(cols * rows).fill(0);
+  var particles = [];
+
+  function layout() {
+    var rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    engineX = W * 0.16; engineY = H * 0.52;
+    factoryX = W * 0.82; factoryY = H * 0.5;
+  }
+  layout();
+  window.addEventListener('resize', layout);
+
+  function spawnParticle() {
+    particles.push({
+      t: 0,
+      speed: 0.007 + Math.random() * 0.007,
+      amp: 12 + Math.random() * 18,
+      phase: Math.random() * Math.PI * 2,
+      r: 1.5 + Math.random() * 1.5
+    });
+  }
+
+  var frame = 0;
+  function drawFrame() {
+    frame++;
+    ctx.clearRect(0, 0, W, H);
+
+    /* motor de hipótesis: núcleo pulsante con anillos orbitando */
+    var pulse = 1 + 0.08 * Math.sin(frame * 0.05);
+    ctx.save();
+    ctx.translate(engineX, engineY);
+    for (var ring = 0; ring < 3; ring++) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(198,138,61,' + (0.5 - ring * 0.13) + ')';
+      ctx.lineWidth = 1.4;
+      var radius = (20 + ring * 12) * pulse;
+      var rot = frame * (0.006 + ring * 0.004) * (ring % 2 === 0 ? 1 : -1);
+      ctx.arc(0, 0, radius, rot, rot + Math.PI * 1.4);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(198,138,61,0.9)';
+    ctx.arc(0, 0, 5 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    /* particulas: hipotesis fluyendo hacia la fabrica */
+    if (!reduceMotion && frame % 24 === 0 && particles.length < 26) spawnParticle();
+    for (var p = particles.length - 1; p >= 0; p--) {
+      var particle = particles[p];
+      particle.t += reduceMotion ? 0 : particle.speed;
+      if (particle.t >= 1) {
+        var slot = Math.floor(Math.random() * factoryLit.length);
+        factoryLit[slot] = 1;
+        particles.splice(p, 1);
+        continue;
+      }
+      var x = engineX + (factoryX - engineX) * particle.t;
+      var y = engineY + Math.sin(particle.t * Math.PI * 2 + particle.phase) * particle.amp * (1 - particle.t * 0.5);
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(198,138,61,' + (0.75 * (1 - Math.abs(particle.t - 0.5))) + ')';
+      ctx.arc(x, y, particle.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    /* fabrica: bots (validados) encendiendose */
+    var gridW = cols * cellSize + (cols - 1) * cellGap;
+    var gridH = rows * cellSize + (rows - 1) * cellGap;
+    var startX = factoryX - gridW / 2;
+    var startY = factoryY - gridH / 2;
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < cols; col++) {
+        var idx = row * cols + col;
+        var lit = factoryLit[idx];
+        if (lit > 0 && !reduceMotion) factoryLit[idx] = Math.max(0, lit - 0.006);
+        var cx = startX + col * (cellSize + cellGap);
+        var cy = startY + row * (cellSize + cellGap);
+        ctx.fillStyle = lit > 0 ? 'rgba(95,168,143,' + (0.25 + 0.55 * lit) + ')' : 'rgba(169,179,189,0.10)';
+        ctx.strokeStyle = lit > 0 ? 'rgba(95,168,143,0.8)' : 'rgba(169,179,189,0.18)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) { ctx.roundRect(cx, cy, cellSize, cellSize, 3); } else { ctx.rect(cx, cy, cellSize, cellSize); }
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+
+    if (!reduceMotion) requestAnimationFrame(drawFrame);
+  }
+
+  if (reduceMotion) {
+    factoryLit = factoryLit.map(function (_, idx) { return idx % 3 === 0 ? 1 : 0; });
+  }
+  drawFrame();
+
+  /* ---- resaltado de la sección activa en la navegación lateral ---- */
+  var navLinks = document.querySelectorAll('.side-toc a');
+  if (navLinks.length && 'IntersectionObserver' in window) {
+    var sections = Array.prototype.map.call(navLinks, function (a) {
+      return document.querySelector(a.getAttribute('href'));
+    });
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var link = document.querySelector('.side-toc a[href="#' + entry.target.id + '"]');
+        if (!link || !entry.isIntersecting) return;
+        navLinks.forEach(function (l) { l.classList.remove('active'); });
+        link.classList.add('active');
+      });
+    }, { rootMargin: '-15% 0px -70% 0px' });
+    sections.forEach(function (s) { if (s) observer.observe(s); });
+  }
+})();
+</script>

@@ -1,0 +1,113 @@
+{
+  "0c_nota_ampliacion_temporal_2026-07-08": "Tras la primera convergencia real (10ma corrida, 4 aceptadas), se auditó si el Builder estaba sobre-restringido: 79/509 building blocks activos, pero se confirmó que refleja el diseño intencional (no un accidente). Se amplió temporalmente el pool con Stochastic (mismo tipo lógico que RSI, no redundante — mide posición relativa en el rango High-Low, no momentum) para converger más rápido en pruebas. Ampliación de prueba, reversible, no cambio definitivo de la hipótesis — ver changelog.md.",
+  "0_resumen_ejecutivo": "Esta plantilla le pide a StrategyQuant X que busque, mediante evolución genética, estrategias intradía en EURUSD (M15, MetaTrader5) capaces de capitalizar episodios de reversión a la media dentro de fases de rango. La oportunidad de mercado que ataca es la siguiente: EURUSD, por ser el par de divisas más líquido y de spread más ajustado del mercado FX, pasa una porción significativa de su tiempo en fases de consolidación sin catalizador macro claro. Durante esas fases, el precio tiende a oscilar entre extremos estadísticamente identificables y revertir hacia su media de corto plazo en lugar de generar tendencia sostenida — es la ineficiencia de 'exceso y reversión', deliberadamente distinta de la de 'ruptura y continuación' que atacaría una plantilla de Breakout (hipótesis alternativa ya contemplada en la matriz activo-hipótesis para este mismo activo).\n\nHerramientas entregadas al motor, y por qué: ADX filtra el contexto (Capa 1) para que el motor no confunda una reversión real con un pullback dentro de una tendencia — sin este filtro la hipótesis quedaría indefinida. Bollinger Bands y RSI se entregan como dos formas alternativas y bien establecidas de medir 'exceso' de precio (desviación estadística vs. momentum sobrecomprado/sobrevendido) para que el motor descubra en los datos reales cuál de las dos — o cuál combinación — captura mejor el fenómeno, en vez de imponer una sola forma de medirlo a priori. El SL y el TP se dejan basados en ATR con período Y multiplicador explorables como rango (no fijos): esto le da al motor la posibilidad de construir estructuras de salida dinámicas, calibrando la distancia de stop/take según la volatilidad real que encuentra cada combinación concreta de parámetros, en vez de imponerle una única ventana de volatilidad a todo el espacio de búsqueda — es una dimensión de búsqueda deliberada, no un descuido de calibración.\n\nQué tipo de resultado se busca: se prioriza calidad sobre cantidad — 'francotiradores', no 'escopeta'. Los criterios de aceptación del Build (ProfitFactor>1.3, NumberOfTrades≥100, ReturnDDRatio>1.5, justificados uno por uno en la sección 15) están pensados para que el motor descarte de entrada cualquier estrategia que dependa de suerte estadística o de muestra insuficiente, aceptando que la búsqueda entregue menos candidatos a cambio de que esos candidatos tengan una probabilidad razonable de sostenerse fuera de muestra.",
+  "1_nombre_hipotesis": "EURUSD-REVRANGE-H1-001 (ex M15-001) — Reversión a la Media en Rango",
+  "0b_nota_pivote_2026_07_07": "Tras 7 corridas reales en M15 sin ninguna estrategia aceptada (ver changelog.md), se pivotó a H1: toda la evidencia real disponible (2 estrategias propias del usuario + 4 proyectos de ejemplo oficiales de StrategyQuant) que efectivamente converge es H1/M30, nunca M15. Se ajustó timeframe (M15→H1), SL/PT (revertido a 1.5x-3x SL / 2x-5x PT, valores de referencia H1, no los ensanchados para M15), Building Blocks de SL/PT (reabiertos todos, ya no restringidos a solo ATR), y población (100/50 restaurada). El proyecto real fue renombrado de user/projects/EURUSD-REVRANGE-M15-001 a user/projects/EURUSD-REVRANGE-H1-001. Objetivo: validar el pipeline completo con la primera convergencia real, y reconsiderar volver a M15 con esa experiencia.",
+  "2_descripcion_hipotesis": "Cuando el precio se extiende significativamente por encima o debajo de su media de corto plazo en ausencia de tendencia direccional, existe una probabilidad estadística elevada de que revierta hacia el equilibrio — condición favorecida en EURUSD por su liquidez y spread ajustado (familia FX_mayor_liquido).",
+  "3_arquitectura_5_capas": {
+    "capa_1_contexto": "Confirma régimen de rango (no-tendencia) antes de considerar cualquier señal. Ej.: ADX(14) por debajo de umbral explorable.",
+    "capa_2_oportunidad": "Detecta la extensión/exceso: precio toca o supera banda externa (Bollinger) o RSI en zona extrema.",
+    "capa_3_evidencia": "Confirma inicio de reversión — misma familia lógica que Capa 2 (exceso/agotamiento): RSI cruzando de vuelta desde la zona extrema, o cierre reingresando dentro de la banda.",
+    "capa_4_ejecucion": "Market o Limit al cierre de la vela de confirmación; máximo 1 entrada activa por dirección.",
+    "capa_5_gestion": "SL más allá del extremo detectado en Capa 2; TP en la media móvil central; salida temporal si no reviene en X barras (evita quedar atrapado si el rango deriva a tendencia).",
+    "notas_capas_neutrales": "Ninguna capa se marca como neutral en esta plantilla; las 5 tienen función activa."
+  },
+  "4_espacio_abierto_builder": [
+    "Período y umbral de ADX",
+    "Período/desviación de Bollinger",
+    "Período/umbral de RSI",
+    "Multiplicadores de SL/TP",
+    "Barras de salida temporal"
+  ],
+  "5_espacio_cerrado_builder": [
+    "Trading Options restringido (restricción operativa por defecto del usuario)",
+    "Tipo de orden limitado a Market/Limit (Stop excluido, no encaja con la hipótesis)",
+    "Familia de indicadores de Capa 2/3 fija a 'exceso/reversión' (no se permite deriva hacia indicadores de tendencia)"
+  ],
+  "6_restricciones_entre_capas": "Capa 1 nunca dispara entrada, solo filtra. Capa 3 debe pertenecer a la misma familia lógica que Capa 2 (regla dura del framework, sección arquitectura-5-capas.md).",
+  "7_diagrama_logico": "Contexto(rango confirmado) → Oportunidad(extremo detectado) → Evidencia(reversión iniciando) → Ejecución(entrada) → Gestión(salida)",
+  "8_espacio_exploracion_por_elemento": {
+    "cerrado": "Tipo de orden y familia lógica de capas 2-3 (para no romper la hipótesis)",
+    "abierto": "Todos los umbrales/períodos numéricos (para permitir diversidad genética real)"
+  },
+  "9_evaluacion_critica": {
+    "fortalezas": "Lógica simple, bien documentada, se beneficia de la liquidez propia del par.",
+    "debilidades": "Falsas señales en rangos 'muertos' de baja volatilidad; riesgo de invalidación súbita por noticias macro que rompen el rango sin aviso técnico previo."
+  },
+  "10_riesgos_sobreajuste": "Ajustar los umbrales de RSI/Bollinger de forma demasiado fina al ruido específico del período de IS; que la versión Flexible, al explorar, empiece a comportarse como breakout en vez de reversión (vigilar por el vínculo de versionado Restrictiva↔Flexible).",
+  "11_recomendaciones_diversidad": "Permitir detectores alternativos de 'exceso' en Capa 2 (Bollinger vs RSI vs distancia a media) como variantes intercambiables, siempre que Capa 3 confirme dentro de la misma familia elegida.",
+  "12_rules_complexity": {
+    "actual_verificado": { "minConditions": 1, "maxConditions": 3, "minExitConditions": 1, "maxExitConditions": 3, "minExitTypes": 1, "maxExitTypes": 5, "minPeriod": 5, "maxPeriod": 50, "minShift": 1, "maxShift": 1 },
+    "nota": "Actualizado 2026-07-07: minConditions bajó de 2 a 1 (aplicado por el usuario en el Builder, verificado por diff del project.cfx). Motivo: dos corridas reales (GBPUSD/MT4 y EURUSD/MT5, mismo diseño) dieron ~43% de estrategias 'sin transacciones' en ambos casos — señal de que exigir mínimo 2 condiciones simultáneas (ADX+Bollinger/RSI) es estructuralmente difícil de satisfacer, independientemente del instrumento. Corrección (mismo día): la referencia a patrones-validados-por-retest.md como evidencia se retiró — esos 2 ejemplos no reflejaban una hipótesis intencional (búsqueda sin dirección del usuario), no son lección de diseño válida. El rango minConditions=1/maxConditions=3 sí tiene respaldo independiente: documentación oficial de StrategyQuant recomienda máximo 1-2 condiciones por señal para robustez, y la regla general de sobreajuste (~200 operaciones OOS por parámetro) también favorece menos condiciones simultáneas. minShift/maxShift fijo en 1 se mantiene sin cambios."
+  },
+  "13_configuracion_genetica": {
+    "actual_verificado": { "PopulationSize": 100, "MaxGenerations": 50, "Islands": 4 },
+    "nota": "Verificado en el project.cfx real — NO es 15/10 como se dijo en una corrección previa de esta ficha (ese dato salía de leer por error el Build-Task del proyecto genérico 'Builder', no relacionado). PopulationSize=100 ya coincide con la referencia de los ejemplos; MaxGenerations=50 es la mitad de la referencia (100) pero no es el problema principal."
+  },
+  "14_sl_pt": {
+    "actual_verificado": { "SLATR": true, "MinSLATRMultiple": 3, "MaxSLATRMultiple": 5, "MinSLATRPeriod": 15, "MaxSLATRPeriod": 30, "PTATR": true, "MinPTATRMultiple": 4, "MaxPTATRMultiple": 10, "MinPTATRPeriod": 15, "MaxPTATRPeriod": 30 },
+    "actualizado_2026_07_07": "Multiplicadores duplicados proporcionalmente (SL 1.5-2.5→3-5, PT 2-5→4-10) tras confirmar con testPrecision=2 que 'cierra en la misma barra' (30-35% de rechazos en las últimas 2 corridas) es un problema real de calibración, no de medición — el SL mínimo anterior (1.5x ATR) era matemáticamente chico frente a la variabilidad normal de una sola vela M15 (ATR es un promedio, muchas velas individuales lo superan). Se mantiene el mismo ratio riesgo/beneficio, solo se amplía la distancia absoluta.",
+    "nota": "Corrección de criterio (2026-07-07): se mantiene el período de ATR como rango explorable (15-30), tal como estaba diseñado originalmente. Explorar período y multiplicador de ATR a la vez le da al motor genético la posibilidad de construir estructuras de SL/PT dinámicas — la distancia de salida se calibra según la volatilidad real que encuentra cada combinación, en vez de imponer una única ventana de volatilidad (ej. ATR(20)) a todo el espacio de búsqueda. Los proyectos de ejemplo lo fijan en 20, pero eso no es evidencia de que fijarlo sea mejor práctica para esta plantilla — es una decisión de diseño distinta, no necesariamente aplicable acá. No se cambia.",
+    "building_blocks_slpt_restringidos_2026_07_07": "Se desactivaron (use=false) los mecanismos de 'Stop/Limit Price Levels' y 'Stop/Limit Price Ranges' que no son ATR (Keltner, Ichimoku, Parabolic SAR, medias móviles, VWAP, SuperTrend, Fibo, Pivots, sesión, etc.), dejando 'Stop/Limit Price Ranges.ATR'/'MTATR' habilitados. Motivo: tercera corrida real (minConditions=1, 276.993 estrategias) mostró que 'cierra en la misma barra' empeoró de 14.79% a 27.27% — señal de que el motor usaba mecanismos de SL/PT inadecuados (no-ATR). Corrección inmediata: al desactivar TODOS los 'Price Levels', el proyecto dejó de poder ejecutarse ('You use Enter at Stop or Limit, you have to choose some Price Level blocks!') porque esa misma categoría también construye el precio de la orden Limit de entrada, no solo el SL/PT. Se reactivaron las 6 referencias básicas no-indicador (Ask, Bid, Open, High, Low, Close) manteniendo apagados los mecanismos basados en indicadores (Keltner, Ichimoku, medias, etc.). Backups sucesivos en user/projects/EURUSD-REVRANGE-M15-001/_backups/."
+  },
+  "15_criterios_aceptacion_por_etapa": {
+    "build": [
+      {
+        "columna": "ProfitFactor", "comparador": ">", "valor": 1.3,
+        "justificacion": "La hipótesis es reversión a la media en rango — perfil típico de win-rate alto y ganancias/pérdidas por operación relativamente parejas (no depende de unas pocas operaciones grandes como un breakout/tendencia). 1.3 es un margen moderado por encima de breakeven, razonable para no exigir un PF de tipo tendencial (2+) a una hipótesis que no lo necesita, pero sí filtrar lo apenas rentable."
+      },
+      {
+        "columna": "NumberOfTrades", "comparador": ">=", "valor": 100,
+        "justificacion": "M15 sobre ~10 años de historia genera muchísimas barras — para una hipótesis de rango que dispara con relativa frecuencia (no es un patrón raro de una vez por semana), 100 operaciones en todo el IS es un piso bajo, no exigente. Se mantiene bajo para no descartar variantes válidas solo por ser algo más selectivas; el filtro de calidad real recae más en ProfitFactor y ReturnDDRatio."
+      },
+      {
+        "columna": "ReturnDDRatio", "comparador": ">", "valor": 1.5,
+        "justificacion": "EURUSD como FX mayor líquido tiene volatilidad relativamente estable/moderada (a diferencia de GOLD o NQ); un ratio retorno/drawdown de 1.5 es un piso conservador pero alcanzable para un activo de este perfil, sin exigir el 3+ que se ve en criterios de Ranking post-Build (esos son para la selección final, no para el filtro de entrada al Build)."
+      }
+    ],
+    "nota": "Los 3 valores fueron elegidos originalmente por el usuario y se conservan aquí con justificación explícita, no por defecto ni copiados de otra plantilla (ver calibracion-motor-genetico.md — los criterios se analizan por plantilla, no se fijan como estándar de biblioteca). La causa real del '0 aceptadas' del 2026-07-05 fue el símbolo/motor equivocado (sección 20, ya corregido), no estos criterios — se prueba primero con ellos intactos. Si tras la corrección la corrida sigue devolviendo 0 o casi 0, el criterio con la justificación más débil para relajar primero sería ReturnDDRatio (es el que combina dos variables y es más sensible a la calibración de SL/PT)."
+  },
+  "16_trading_options": {
+    "session": "No Session",
+    "dont_trade_weekends": false,
+    "max_trades_per_day": 0,
+    "order_types": ["Market", "Limit"],
+    "nota": "Valores tomados de la configuración real ya usada; se dejan explícitos en vez de solo 'restringido por defecto'."
+  },
+  "17_money_management": {
+    "actual_verificado": { "metodo": "FixedSize", "size": 0.1, "initialCapital": 10000 },
+    "nota": "Verificado en el project.cfx real: ya coincide exactamente con el estándar de la biblioteca (ver configuracion-money-management.md). No hay desviación que corregir aquí — una corrección previa de esta ficha decía erróneamente que usaba FixedAmount; ese dato también salía de leer el proyecto 'Builder' equivocado."
+  },
+  "18_plan_retest": [
+    "Monte Carlo Manipulation (decenas de simulaciones reordenando/perturbando la secuencia de operaciones)",
+    "Monte Carlo Retest (remuestreo de la serie de resultados)",
+    "CrossCheck de mayor precisión (retest a granularidad tick, curva de equity diaria)",
+    "Perfil de sensibilidad de optimización (robustez ante pequeños cambios de parámetros)"
+  ],
+  "18b_nota": "Pipeline tomado de evidencia real (ver .claude/rules/patrones-validados-por-retest.md) — estrategias EURUSD reales que pasaron Retest usaron exactamente estas 4 pruebas, no una lista genérica de robustez.",
+  "19_optimizer": "No aplica por ahora — se evalúa después de tener resultados aceptados del Build.",
+  "19b_pipeline_multitarea_pendiente": "Requisito registrado 2026-07-07 en .claude/rules/pipeline-multitarea-y-diseno-is.md: cuando esta plantilla logre su primera convergencia real, armar el pipeline completo (Build → Retest OOS sin solapar → Retest en mercado correlacionado → Walk-Forward Matrix/Optimization → limpieza → loop), clonado de un proyecto de ejemplo real ya validado, con diseño de IS/OOS consciente de los regímenes históricos de EURUSD (2008, 2010-2012, 2016, 2020, 2022). No aplicado todavía — EURUSD-REVRANGE-H1-001 no convergió aún.",
+  "20_hallazgo_critico_confirmado": {
+    "descartado_por_el_usuario": "El modo 'mejorar estrategia existente' que sugería el XML (improveType/PartsToImprove) NO está activo — confirmado en la interfaz: pestaña 'What to build' muestra 'Simple strategy'. Esos campos del XML son residuales sin efecto real en este modo.",
+    "confirmado_por_el_usuario": "En la pestaña de datos: símbolo = GBPUSD_M1_dukas (debía ser EURUSD), motor = MetaTrader4 (debía ser MetaTrader5). Temporalidad M15 correcta.",
+    "impacto": "El Build del 2026-07-05 corrió sobre GBPUSD M15 MT4, no sobre EURUSD M15 MT5. El resultado (0 aceptadas) no es evidencia sobre el par/motor que dice esta ficha.",
+    "accion_requerida_antes_de_recalibrar_nada_mas": [
+      "Cambiar el símbolo del Setup principal a EURUSD (verificar el nombre exacto disponible en Data Manager para MetaTrader5, ej. EURUSD_M1_dukas o equivalente)",
+      "Cambiar el motor del Setup a MetaTrader5",
+      "Recién después de esto, aplicar los ajustes de las secciones 12-17 (población/generaciones, criterios de aceptación por etapa, período ATR)"
+    ]
+  },
+  "metadata": {
+    "activo": "EURUSD",
+    "familia_activo": "FX_mayor_liquido",
+    "timeframe": "H1",
+    "timeframe_anterior": "M15 (pivote experimental 2026-07-07, ver 0b_nota_pivote)",
+    "motor": "MetaTrader5",
+    "hipotesis": "Reversión a la media en rango",
+    "regimen_historico_valido": "Últimos 8 años (recorte deliberado, no todo el histórico disponible) — justificación: datos más antiguos ya no representan el comportamiento actual del mercado, según criterio del usuario. Confirmado el 2026-07-04, revierte la decisión inicial de usar todo el histórico.",
+    "trading_options_restringido": true,
+    "fecha_creacion": "2026-07-04",
+    "ultima_actualizacion": "2026-07-07",
+    "estado": "recalibrada_pendiente_nueva_corrida"
+  }
+}
