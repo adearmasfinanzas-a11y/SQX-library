@@ -183,16 +183,29 @@ Conclusión: `FilterByOOSProfitFactor.java` **no se escribe**. El filtro de Prof
 
 Con el hallazgo de arriba, un solo `Filtering` puede cubrir tanto el filtro barato inicial como el filtro de Profit Factor OOS en una sola tarea con varias condiciones simultáneas (ej. `NetProfit(main) > 0` **y** `ProfitFactor(Out of Sample) ≥ 1.0`), en vez de dos tareas separadas como se había propuesto antes.
 
-### Retest — investigado y propuesta concreta (actualizado 2026-07-12)
+### Retest — investigado y confirmado en la práctica (actualizado 2026-07-12)
 
-Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`) contra el `Retest-Task2.xml` real de `GBPJPY BREAKOUT H1 - Dukascopy`:
+Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`) contra el `Retest-Task2.xml` real de `GBPJPY BREAKOUT H1 - Dukascopy`, y luego **armado paso a paso en la interfaz real de `EURUSD-REVRANGE-H1-001`** — pestaña "What to retest" y pestaña "Data" completas, confirmadas campo por campo.
 
-- **Databank Input=Output** en el ejemplo real (mismo databank de entrada y salida — testea in-place). Para nuestro caso: `OOS_Filtrado` → `OOS_Filtrado`.
-- **Money Management por defecto `FixedSize`** — coincide con el estándar ya fijado en `configuracion-money-management.md`, no hay que tocarlo.
-- Comparte el mismo framework de condiciones/Rankings que `Filtering` y `Build` — ver `mecanismo-condiciones-filtrado.md`, nada nuevo que aprender ahí.
-- **Walk-Forward Optimization/Matrix existe en la estructura pero está desactivado (`use="false"`) incluso en el proyecto de ejemplo real validado** — no es un default recomendado, hay que decidir explícitamente si se activa para esta plantilla.
-- **Ventana de datos:** ver sección 1b — datos reservados deliberadamente fuera del alcance del Build, traídos hasta la fecha más actual disponible (no solo hasta donde ya estaban). Pendiente: confirmar la fecha exacta de corte una vez que el usuario actualice los datos hasta el presente.
-- Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) queda como candidato para chequear si la lógica se sostiene fuera del activo específico donde se descubrió — a decidir si se incluye en esta primera pasada o se deja para más adelante.
+**"What to retest":**
+- **Databank Input=Output** en el ejemplo real (mismo databank de entrada y salida — testea in-place). Aplicado: `OOS_Filtrado` → `OOS_Filtrado` (no se conserva el estado pre-Retest aparte — es barato de reconstruir desde el bruto ya respaldado + el filtro ya documentado).
+
+**"Data" — Backtest data settings:**
+- **Symbol/Timeframe/Engine: idénticos al Build** (`EURUSD_dukas_M1_UTCPlus02`, H1, `MetaTrader5 (netted)`) — nunca cambiar el motor entre Build y Retest, mezclaría su propio efecto con la validación OOS real.
+- **Start day = el mismo `dateFrom` del Build** (`2015.01.01`), nunca el inicio de la ventana reservada — ver sección 1b para el razonamiento completo (warmup de indicadores + comparación completa en un solo reporte).
+- **End day = la fecha más reciente de datos disponible** (`2026.04.16` en esta corrida) — la ventana reservada se define por el `dateTo`, no por el `dateFrom`.
+
+**"Data" — Test parameters:**
+- **Precision: "1 minute data tick simulation (slow)"** (no la opción rápida por defecto) — con solo ~500 candidatas en esta etapa (vs. millones en el Build) se puede pagar el costo de mayor precisión, mismo techo real que ya establecimos para EURUSD en esta instalación (no hay datos de tick).
+- **Comisión y swap: subidos ~30-35% sobre los valores reales del Build, como prueba de estrés moderada, no una fricción real igual ni una inventada al azar.** Ejemplo real aplicado: Build `Commission SizeBased=6` / `Swap money long=-6.5 short=-3.5` → Retest `Commission SizeBased=8` / `Swap money long=-8 short=-5`. Panel real: Commission → radio "Size based" (no "None") + campo de valor; Swap → toggle "Use" activado + `Swap type=money` + campos Long/Short — Triple swap day y Rollout hour se dejan igual que el Build (son mecánica del broker, no costo a estresar). Ver `configuracion-money-management.md` para el protocolo completo (definir broker objetivo ANTES del Build, subir el costo recién en el Retest).
+- **Slippage: `1` pip.** El Build usa `slippage=0` (no hay base de la cual escalar un porcentaje) — se usa un valor moderado y realista en vez de un incremento proporcional, aprovechando que la interfaz ya trae `1` por defecto (asunción conservadora común en backtesting retail de FX, no es un valor extremo).
+- **Min. distance: `0` pips, igual que el Build.** A diferencia de comisión/spread/slippage, este campo **no es un costo a estresar** — es una restricción estructural del broker (distancia mínima entre precio actual y una orden pendiente), no algo que suba con la fricción de trading. Se mantiene coherente con el Build, no se toca.
+
+**"Data" — Data range parts (distribución IS/ISV/OOS, pendiente de completar):** existen 5 presets nativos de porcentaje genérico sobre todo el rango cargado (`50/20/30`, `30/20/50`, `20/20/10/20/20/10` walk-forward de 2 vueltas, IST/ISV alternado + cola OOS, IST/OOS alternado) — **ninguno sirve tal cual**, porque nuestro límite OOS real es una fecha exacta y deliberada (`2024.12.31`→`2025.01.01`), no un porcentaje del rango total. Se decidió usar **"Add new part"** para armar manualmente los tramos con esa fecha real como frontera, en vez de un preset — pendiente de confirmar cómo quedó armado en la práctica.
+
+**Pendiente de investigar en las próximas pestañas:** Trading options, ATM, Money management (debería heredar `FixedSize` por defecto, a confirmar), Cross checks (Walk-Forward Optimization/Matrix existe pero está `use="false"` incluso en el proyecto de ejemplo real — decidir explícitamente si se activa), Ranking, Notes.
+
+Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) queda como candidato para chequear si la lógica se sostiene fuera del activo específico donde se descubrió — a decidir si se incluye en esta primera pasada o se deja para más adelante.
 
 ### CreatePortfolio / AutomaticPortfolioBuilder — propuesta concreta
 
