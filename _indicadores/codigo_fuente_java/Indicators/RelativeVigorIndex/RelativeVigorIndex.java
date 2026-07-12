@@ -56,7 +56,7 @@ public class RelativeVigorIndex extends IndicatorBlock {
 
 	//------------------------------------------------------------------------
 
-	private double bar(DataSeries series, int idx) {
+	private double bar(DataSeries series, int idx) throws TradingException {
 		return (idx <= getCurrentBar()) ? series.get(idx) : series.get(getCurrentBar());
 	}
 

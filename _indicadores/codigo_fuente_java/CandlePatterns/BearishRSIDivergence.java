@@ -38,7 +38,7 @@ public class BearishRSIDivergence extends ConditionBlock {
 	//------------------------------------------------------------------------
 	//------------------------------------------------------------------------
 
-	private double simpleRSI(int shiftBack) {
+	private double simpleRSI(int shiftBack) throws TradingException {
 		double sumGain = 0, sumLoss = 0;
 		for (int i = 0; i < RSIPeriod; i++) {
 			double curr = Chart.Close(shiftBack + i);
@@ -53,7 +53,7 @@ public class BearishRSIDivergence extends ConditionBlock {
 		return 100 - (100 / (1 + rs));
 	}
 
-	private boolean isSwingHigh(int barShift) {
+	private boolean isSwingHigh(int barShift) throws TradingException {
 		double centerHigh = Chart.High(barShift);
 		for (int s = 1; s <= SwingStrength; s++) {
 			if (Chart.High(barShift - s) > centerHigh) return false;

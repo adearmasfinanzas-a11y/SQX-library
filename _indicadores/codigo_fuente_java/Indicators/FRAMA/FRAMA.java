@@ -48,7 +48,7 @@ public class FRAMA extends IndicatorBlock {
 
 	//------------------------------------------------------------------------
 
-	private double highestLowest(int fromIdx, int toIdxExclusive, boolean high) {
+	private double highestLowest(int fromIdx, int toIdxExclusive, boolean high) throws TradingException {
 		double result = high ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
 		for (int idx = fromIdx; idx < toIdxExclusive; idx++) {
 			int safeIdx = Math.min(idx, getCurrentBar());

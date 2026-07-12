@@ -47,7 +47,7 @@ public class HurstExponent extends IndicatorBlock {
 	//------------------------------------------------------------------------
 
 	// R/S sobre una sub-ventana de "size" barras, empezando "size" barras atras desde el shift dado
-	private double rescaledRange(int size) {
+	private double rescaledRange(int size) throws TradingException {
 		double mean = 0;
 		for (int idx = 0; idx < size; idx++) {
 			mean += Chart.Close.get(idx);

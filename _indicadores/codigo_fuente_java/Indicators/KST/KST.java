@@ -72,7 +72,7 @@ public class KST extends IndicatorBlock {
 
 	//------------------------------------------------------------------------
 
-	private double rocAt(int period) {
+	private double rocAt(int period) throws TradingException {
 		int back = Math.min(period, getCurrentBar());
 		double past = Chart.Close.get(back);
 		double now = Chart.Close.get(0);
