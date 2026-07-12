@@ -234,6 +234,10 @@ Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`
 2. **Segunda pasada (Retest futuro):** Monte Carlo trades manipulation + Monte Carlo retest methods, sobre las sobrevivientes de este primer Retest.
 3. **Tercera pasada (Retest futuro):** Walk-Forward Matrix (preferido sobre Walk-Forward Optimization — da el gráfico 3D de robustez, mide directamente la métrica WFE de referencia ya documentada en sección 1), sobre las sobrevivientes de la segunda pasada.
 
+**Aclaración importante del usuario (2026-07-12): "Backtests on additional markets" tiene su propio Setup independiente** (símbolo, fechas, spread, comisión) — no hereda nada de la pestaña "Data" del Retest principal. Al configurar GBPUSD ahí, aplica el mismo criterio de fechas ya establecido (`dateFrom` heredado del Build, `dateTo` hasta el dato más reciente) pero con el histórico real disponible de GBPUSD (puede no cubrir exactamente el mismo rango que EURUSD), y spread/comisión reales de GBPUSD a verificar, no los valores por defecto de la interfaz sin comprobar.
+
+**Pendiente de confirmar en la práctica: ¿las tareas nuevas heredan la configuración de tareas del mismo tipo ya armadas, o hay que redefinir todo?** No hay evidencia directa todavía. Pista fuerte a favor de que NO heredan automático: existe un mecanismo manual en el menú contextual de cada tarea ("Copiar la configuración de la tarea" / "Copiar la configuración en una o varias tareas") — si la herencia fuera automática, ese botón no tendría mucho sentido. Recomendación de trabajo: terminar de configurar y guardar este Retest, usar "Copiar la configuración de la tarea" sobre él para aplicarla a la próxima tarea Retest (pasada de Monte Carlo) en vez de armar todo desde cero, y confirmar el resultado real antes de asumirlo como mecanismo definitivo.
+
 **Pendiente de investigar:** Ranking, Notes.
 
 Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) queda como candidato para chequear si la lógica se sostiene fuera del activo específico donde se descubrió — a decidir si se incluye en esta primera pasada o se deja para más adelante.
