@@ -207,7 +207,34 @@ Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`
 
 **Hallazgo real: bug de conversión de unidades en `DontTradeOnWeekends` del Build (2026-07-12).** El XML del Build tiene `FridayCloseTime=2300` y `SundayOpenTime=2300` — estos campos se guardan en **segundos desde medianoche** (mismo formato que `EODExitTime`/`FridayExitTime`, confirmado porque esos sí convierten exacto: `83040s→23:04`, `74400s→20:40`, ambos coincidieron con la interfaz real). Pero `2300` interpretado como segundos da **`00:38`**, no `23:00` — un valor sin sentido práctico (cortaría casi toda la sesión del viernes, y no tiene efecto real el domingo porque el mercado FX no reabre hasta la noche). Hipótesis: en algún momento se quiso guardar el valor sensato `23:00` pero se ingresó como el texto crudo `2300` en vez de convertirlo a segundos (`82800`). **`DontTradeOnWeekends=true` estuvo activo durante toda la corrida real del Build (2.5 días, 1000 estrategias)** con este valor roto — en la práctica, efecto casi nulo (no protegió contra riesgo de gap de fin de semana como se pretendía, pero tampoco recortó operativa de forma dañina). No se rehace el Build ya corrido por esto. **Corregido en el Retest** (escribiendo `23:00` directamente vía la interfaz, que se encarga de la conversión correcta) y **registrado como punto a verificar explícitamente al configurar el Build de cualquier plantilla futura** — no confiar en que escribir el número de la hora "tal cual" (ej. `2300`) haga lo esperado en este campo específico.
 
-**Pendiente de investigar en las próximas pestañas:** ATM, Money management (debería heredar `FixedSize` por defecto, a confirmar), Cross checks (Walk-Forward Optimization/Matrix existe pero está `use="false"` incluso en el proyecto de ejemplo real — decidir explícitamente si se activa), Ranking, Notes.
+**"ATM":** confirmado `enable="false"` en el Build real — se deja igual en el Retest, mismo criterio que Trading Options (no es un costo a estresar, es gestión de ejecución que debe coincidir con lo que el Build realmente evaluó).
+
+**"Money management":** confirmado `FixedSize`/0.1/`InitialCapital=10000`, coincide exactamente con el estándar ya fijado — sin cambios.
+
+**"Cross checks (robustness)" — confirmado real, con estructura de 3 niveles (2026-07-12):** la interfaz agrupa 9 pruebas en `BASIC (FAST)`, `STANDARD (SLOW)`, `EXTENSIVE (SLOWEST)`:
+
+| Nivel | Prueba | Qué hace |
+|---|---|---|
+| Basic | What If simulations | 2 simulaciones |
+| Basic | Monte Carlo trades manipulation | 2 tests × 30 simulaciones |
+| Basic | Higher backtest precision | backtest adicional a mayor precisión, como red de seguridad |
+| Standard | Backtests on additional markets | retesta en otro símbolo/mercado configurable |
+| Standard | Monte Carlo retest methods | 6 tests × 10 simulaciones |
+| Standard | Sequential Optimization | distribución Up/Down %, steps |
+| Extensive | Opt. Profile / Sys. Param. Permutation | hasta 1000 optimizaciones |
+| Extensive | Walk-Forward Optimization | Out of sample %, N runs |
+| Extensive | Walk-Forward Matrix | Out of sample % (rango), N runs (rango) — da el gráfico 3D de robustez |
+
+**Dos hallazgos reales al revisar el default heredado del proyecto (probablemente de un proyecto de ejemplo del que partió esta plantilla):**
+1. **"Higher backtest precision" venía activado en "1 minute data tick simulation (slow)"** — pero la precisión principal (pestaña Data) ya se subió exactamente a ese mismo nivel (el techo real para EURUSD, sin tick data disponible). Dejarlo activado compararía el resultado contra sí mismo, sin aportar nada — **se apaga**.
+2. **"Backtests on additional markets" apuntaba a `EURUSD_M1_dukas`** — no es un mercado distinto, es una variante de datos del mismo EURUSD (remanente del proyecto de ejemplo original, spread=2 en vez del real 0.4). El propósito real de este cross-check es verificar si la lógica se sostiene en un mercado correlacionado pero genuinamente distinto — **se cambia el destino a GBPUSD** (misma familia `FX_mayor_liquido`, ya identificado como candidato en `proceso-portafolio.md`).
+
+**Plan acordado con el usuario: robustez en 3 pasadas separadas, no todo de una vez** (evita pagar el costo computacional completo sobre candidatas que ya se van a filtrar en pasos previos):
+1. **Este Retest:** solo `Higher backtest precision` (apagado) + `Backtests on additional markets` (GBPUSD) — el resto de robustez queda apagado.
+2. **Segunda pasada (Retest futuro):** Monte Carlo trades manipulation + Monte Carlo retest methods, sobre las sobrevivientes de este primer Retest.
+3. **Tercera pasada (Retest futuro):** Walk-Forward Matrix (preferido sobre Walk-Forward Optimization — da el gráfico 3D de robustez, mide directamente la métrica WFE de referencia ya documentada en sección 1), sobre las sobrevivientes de la segunda pasada.
+
+**Pendiente de investigar:** Ranking, Notes.
 
 Retest cruzado en GBPUSD (misma familia `FX_mayor_liquido`, ver `proceso-portafolio.md`) queda como candidato para chequear si la lógica se sostiene fuera del activo específico donde se descubrió — a decidir si se incluye en esta primera pasada o se deja para más adelante.
 
