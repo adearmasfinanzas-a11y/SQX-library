@@ -263,6 +263,22 @@ Fuentes del dato de FTMO GBPUSD: [FTMO overall costs — BabyPips Forum](https:/
   - Fuentes: [Validate Your Trading Edge with Out-of-Sample Backtesting](https://arongroups.co/forex-articles/out-of-sample-backtesting/), [Understanding Drawdown, Sharpe Ratio, and Profit Factor](https://quantstrategy.io/blog/essential-backtesting-metrics-understanding-drawdown-sharpe/), [Top 7 Metrics for Backtesting Results](https://www.luxalgo.com/blog/top-7-metrics-for-backtesting-results/).
 - **"Delete FAILED strategies from databank": apagado** — coherente con `criterio-descarte-plantillas.md` (nunca se borra sin dejar registro).
 - **"Run crosschecks independently from Custom filters failure": apagado.** Significado confirmado: si está encendido, los cross-checks (Backtests on additional markets en GBPUSD, Higher backtest precision) correrían **igual** aunque la estrategia ya haya fallado los 4 filtros personalizados; apagado (recomendado y aplicado), esos cross-checks **no se ejecutan** sobre estrategias que ya fallaron — ahorra cómputo, coherente con la filosofía de pasadas separadas ya establecida (no pagar robustez cara sobre candidatas que ya se van a descartar). Nota: cada cross-check tiene además su propia pestaña "Filtering" interna (vista en el diálogo de GBPUSD, no explorada en detalle) para condiciones específicas de ese cross-check en particular.
+- **"1 filtro automático activado" (resuelto, 2026-07-13) — tabla completa de los 10 códigos de "Problem" (`AutomaticDismissal`), encontrada en `internal/web/RESULTS2/result2.js`:**
+
+| Código | Descripción |
+|---|---|
+| 1 | Sin operaciones (**único con `dismiss=true` por defecto**) |
+| 2 | Muy pocas operaciones (no significativo estadísticamente) |
+| 4 | Operaciones con P/L cero |
+| 8 | Demasiadas operaciones cerrando en la misma barra |
+| 16 | Operaciones de duración cero |
+| 32 | Demasiadas operaciones abiertas simultáneas |
+| 64 | Operaciones sin terminar al final del período |
+| 256 | Sin operaciones ejecutadas (filled) |
+| 512 | Operación atípica — una operación excepcionalmente grande |
+| 1024 | Demasiadas operaciones ambiguas (no se puede determinar si SL o PT se activó primero) |
+
+Esta tabla confirma con certeza las descripciones que se venían viendo sin numerar en los logs del Build desde el inicio del proyecto ("muy pocas transacciones", "transacción atípica", "cierra en la misma barra", "sin transacciones", "transacciones ambiguas"). **Se activó también el código 512 para este Retest** (además del 1, que ya viene por defecto) — en una ventana OOS corta (~15 meses) una sola operación excepcionalmente grande podría distorsionar el Profit Factor/Ret-DD medido. El 1024 (ambiguas) se dejó sin activar porque ya se mitiga en parte con `testPrecision=2`. Aplicado editando directamente `Retest-Task1.xml` con el proyecto cerrado (backup previo, reempaquetado del `.cfx` con clases .NET `System.IO.Compression` — `zip` no está disponible en el entorno bash de este asistente), verificado por reextracción completa.
 
 **Preset completo confirmado con el `.cfx` real exportado (`Retest strategies.cfx`, archivado en `EURUSD/ReversionRango/pipeline_tareas/Retest_strategies_task1.cfx`):** verificado campo por campo contra todo lo acordado en esta sección — `dateFrom=2015.01.01`/`dateTo=2026.04.16` (Setup principal), `dateFrom=2025.01.01`/`dateTo=2026.04.13` (Data range part OOS), `testPrecision=2`, `Commission SizeBased=8`, `Swap money long=-8 short=-5`, GBPUSD `Commission=3`/`Swap points long=-1.93 short=-1.74`, las 4 condiciones de Ranking con sus `sampleType` exactos (127 para Trades/mes, 20 para PF/Ret-DD/Sharpe), `DeleteFailedStrategies=false`. **El campo real detrás de "Run crosschecks independently from Custom filters failure" es `ForceRunCrossChecks`**, confirmado en `false`. **El fix del bug de fin de semana también se confirmó matemáticamente correcto:** `FridayCloseTime`/`SundayOpenTime=82800` segundos = exactamente `23:00`.
 
