@@ -263,6 +263,19 @@ Investigado comparando el `task.xml` por defecto (`internal/plugins/TaskRetest/`
 
 Fuentes del dato de FTMO GBPUSD: [FTMO overall costs — BabyPips Forum](https://forums.babypips.com/t/ftmo-overall-costs/1221034), [Understanding Spreads and Commissions at FTMO](https://allproptradingfirms.com/understanding-spreads-and-commissions-at-ftmo/).
 
+### Criterio de diseño: la generalización a otro mercado es evidencia a favor, no un filtro de descarte (establecido 2026-07-13)
+
+El usuario planteó una duda válida: si el cross-check de GBPUSD llegara a rechazar candidatas, se perderían estrategias buenas específicamente para EURUSD solo por no generalizar a otro mercado — objetivo que no tiene por qué exigirse. **Se verificó primero el estado real** (`Retest-Task1.xml`): `RetestOnAdditionalMarkets` tiene `<Conditions />` **vacío** dentro de su `AcceptanceSettings` — confirma que, tal como está configurado, **el cross-check de GBPUSD corre y reporta resultados, pero no rechaza a nadie** (no se perdió ninguna de las 39 supervivientes reales por su desempeño en GBPUSD).
+
+**Se buscó en internet si la generalización a mercados correlacionados debería ser un requisito o solo evidencia adicional:** la literatura sí la recomienda como parte de las pruebas antes de arriesgar capital real (ayuda a detectar sobreajuste al ruido específico de un instrumento), pero **no como condición de descarte** — una estrategia válida solo para su instrumento nativo sigue siendo desplegable y útil ahí, no necesita generalizar para tener valor.
+
+**Se fija como criterio de diseño permanente:**
+1. El cross-check de mercado adicional (GBPUSD u otro) se deja **sin condiciones de descarte** (`<Conditions />` vacío) — solo informativo.
+2. Las próximas pasadas de robustez (Monte Carlo, Walk-Forward Matrix) se aplican al **conjunto completo** de supervivientes de la validación OOS primaria, no a un subconjunto recortado por generalización a otro mercado.
+3. **Al llegar al resultado final curado, se documenta explícitamente cuáles de las supervivientes también tuvieron buen desempeño en el mercado adicional** — como dato de valor agregado (mayor confianza de que no está sobreajustada a ruido específico del instrumento original, y abre la opción de considerarla también para ese otro mercado), no como criterio de selección.
+
+Fuentes: búsqueda sobre validación multi-instrumento y sobreajuste en estrategias de trading (2026-07-13), confirma que el testeo en múltiples instrumentos es una práctica recomendada de robustez, sin implicar que sea obligatorio pasar en todos para que una estrategia sea válida en su mercado nativo.
+
 **Pendiente de confirmar en la práctica: ¿las tareas nuevas heredan la configuración de tareas del mismo tipo ya armadas, o hay que redefinir todo?** No hay evidencia directa todavía. Pista fuerte a favor de que NO heredan automático: existe un mecanismo manual en el menú contextual de cada tarea ("Copiar la configuración de la tarea" / "Copiar la configuración en una o varias tareas") — si la herencia fuera automática, ese botón no tendría mucho sentido. Recomendación de trabajo: terminar de configurar y guardar este Retest, usar "Copiar la configuración de la tarea" sobre él para aplicarla a la próxima tarea Retest (pasada de Monte Carlo) en vez de armar todo desde cero, y confirmar el resultado real antes de asumirlo como mecanismo definitivo.
 
 **"Ranking" — confirmado con evidencia real y ajustado con criterio propio (2026-07-12/13):**
