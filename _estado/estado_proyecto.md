@@ -32,9 +32,20 @@ Este archivo es el **punto de partida obligatorio** de cualquier sesión de trab
 ## Foco actual
 
 **Plantilla activa:** `EURUSD-REVRANGE-H1-001` (EURUSD, Reversión a la media en rango, H1, MetaTrader5)
-**Estado:** `databank_lleno_1000_pendiente_ensamblar_pipeline`
-**Dónde quedó exactamente (2026-07-12):** el Build de la duodécima corrida (testPrecision=1) terminó solo por `StopCondition databank-full` al llegar a **1000 estrategias** en el databank (2 días 16 hrs, log `log/global_log_20260709_085433.log` — detalle completo en `EURUSD/ReversionRango/changelog.md`, entrada 2026-07-12). Las 1000 fueron exportadas y respaldadas en `D:\Ariel De Armas\Forex\EURUSD\Plantillas\Reversion-Media\_backup_1000_bruto_2026-07-12\` (verificado: 1000 `.sqx`). Es material **en bruto, sin filtrar ni validar en OOS** — no confundir con candidatas curadas.
-**Próximo paso concreto:** ensamblar el pipeline multi-tarea (Filtering → CustomAnalysis con filtro OOS Profit Factor → Retest → Portfolio → SaveToFiles → LogDatabankStats → Notification → ClearDatabanks → GoToTask) sobre el databank actual, con la tarea de Build puesta en `active="false"` (ya cumplió su función, mecanismo nativo confirmado) mientras se prueba el resto. Diseño y config. propuesta de cada bloque en `.claude/rules/pipeline-multitarea-y-diseno-is.md` secciones 3b-3e. Falta escribir `FilterByOOSProfitFactor.java` (solo diseñado, no creado como archivo) y compilar en Code Editor los 35 archivos de indicadores/patrones nuevos (17+18, dos rondas de investigación) que quedaron pendientes de compilar mientras el Build corría — ver `_indicadores/indicadores_propuestos.json`.
+**Estado (2026-07-13):** `pipeline_ensamblado_retest_corriendo`
+**Dónde quedó exactamente:** el Build terminó con 1000 estrategias (bruto, respaldado). El pipeline multi-tarea quedó **armado y corriendo**, 5 tareas activas en secuencia: `Build → Save to files → Filter strategies → Clear Databanks → Retest strategies`. Estado de cada una:
+- **Filter strategies** (filtro OOS nativo, sin código — ver `.claude/rules/mecanismo-condiciones-filtrado.md`): corrido, **535 de 1000 pasaron** (PF OOS≥1.2, NumberOfTrades OOS≥30) → quedaron en databank `OOS_Filtrado`.
+- **Save to files**: corrido, las 1000 en bruto respaldadas en `Reversion-Media\_runs\2026-07-12_corrida01\01_bruto_build\` (1000 `.sqx` + resumen XLSX) — ver `.claude/rules/mecanismo-savetofiles.md`.
+- **Clear Databanks**: corrida, limpió `Results` (465 que no pasaron el filtro, ya respaldadas en el bruto).
+- **Retest strategies**: **corriendo al cierre de esta sesión (noche 2026-07-12/13)** — configuración completa armada y verificada con el usuario campo por campo (ver `.claude/rules/pipeline-multitarea-y-diseno-is.md`, sección Retest): ventana OOS real reservada (`2025.01.01`-`2026.04.13`, datos nunca vistos por el Build), costos subidos ~30% como estrés, 4 condiciones de filtro (Trades/mes, PF/Ret-DD/Sharpe sobre OOS), cross-check en GBPUSD con costos reales de FTMO, código de descarte automático 512 activado. **Al retomar: revisar resultado del Retest (cuántas de las 535 sobrevivieron) antes de seguir.**
+
+**Hito técnico importante de esta sesión:** se confirmó que el asistente puede armar tareas completas del pipeline **de forma autónoma, editando el `project.cfx` directamente** (sin depender de que el usuario configure cada tarea a mano en la interfaz) — tras un incidente real (un método de escritura de ZIP corrompió el proyecto, restaurado sin pérdida de datos) se encontró y validó el método correcto. Ver `.claude/rules/mecanismo-edicion-directa-proyectos.md` — protocolo obligatorio para cualquier edición directa futura.
+
+**Otros pendientes de esta sesión:**
+- Compilados con éxito los 39 indicadores/patrones custom (dos rondas de investigación) — ver `_indicadores/indicadores_propuestos.json`, todos en estado `implementado`.
+- Repo Git privado creado (`github.com/adearmasfinanzas-a11y/SQX-library`) — todo el trabajo de esta sesión respaldado ahí, commits frecuentes.
+- Pendiente (registrado en `EURUSD/ReversionRango/changelog.md`): entre este Retest y la próxima pasada (Monte Carlo), agregar `Filtering` en modo "Éxito" para separar las que pasen sin borrar las que fallen. Tercera pasada planeada: Walk-Forward Matrix.
+- `FilterByOOSProfitFactor.java` **ya no hace falta** — se descartó esa idea, el filtro OOS se resuelve nativamente sin código (ver `mecanismo-condiciones-filtrado.md`).
 
 **Contexto histórico (M15, resuelto por pivote a H1):** el proyecto original `EURUSD-REVRANGE-M15-001` no logró convergencia real en 7 corridas (ver detalle completo abajo, sección "Historial de sesiones" y `EURUSD/ReversionRango/changelog.md`). Se pivotó a H1 el 2026-07-07 tras confirmar que toda la evidencia real disponible converge en H1/M30, nunca M15. El proyecto fue renombrado a `EURUSD-REVRANGE-H1-001` y logró su primera convergencia real en las corridas siguientes (12 candidatas organizadas en `candidatas_build/` antes de esta corrida final a 1000).
 
@@ -96,6 +107,19 @@ Se leyó el log real de la corrida (`log/global_log_20260705_184206.log`): 107.4
 ---
 
 ## Historial de sesiones
+
+### 2026-07-12/13 — Build terminado (1000), pipeline completo armado y corriendo, autonomía de edición confirmada
+Sesión muy larga y densa, resumen de lo esencial (detalle completo en `.claude/rules/pipeline-multitarea-y-diseno-is.md`, `mecanismo-condiciones-filtrado.md`, `mecanismo-savetofiles.md`, `mecanismo-edicion-directa-proyectos.md`, y `EURUSD/ReversionRango/changelog.md`):
+- El Build terminó (1000 estrategias), respaldadas en bruto fuera de la instalación (`Reversion-Media\_runs\`).
+- Se armó el pipeline completo de 5 tareas junto con el usuario, tarea por tarea, investigando cada una con evidencia real (decompilación con `javap`, comparación contra proyectos de ejemplo) antes de proponer configuración — metodología ya fijada como estándar desde antes, aplicada rigurosamente toda la sesión.
+- Corregida una sobre-ingeniería propia: no hacía falta `CustomAnalysis` en Java para el filtro OOS, la tarea nativa `Filtering` ya lo resuelve.
+- Se investigó y aplicó una separación física de datos (reservar el tramo más reciente fuera del alcance del Build) como práctica de validación OOS más fuerte que un simple split — confirmada como práctica reconocida por fuentes externas.
+- Se armó el Retest completo con el usuario: costos subidos moderadamente como prueba de estrés (no copiados a lo loco), Sharpe Ratio agregado tras cuestionar si el combo de filtros por defecto alcanzaba, cross-check en GBPUSD con costos reales verificados (FTMO), y corrección de umbrales tras observación directa de los datos (Ret/DD bajado de `>4` a `>=3`).
+- Se encontraron y corrigieron dos bugs reales de la instalación: conversión de unidades en `DontTradeOnWeekends` (segundos vs HH:MM), y se resolvió el misterio de los "filtros automáticos" (tabla completa de 10 códigos encontrada en el código fuente de la interfaz).
+- **Incidente real y resuelto:** un intento de crear una tarea sin pasar por la interfaz corrompió el proyecto (método de ZIP incompatible) — restaurado sin pérdida de datos, encontrado y validado el método correcto (reconstrucción completa desde cero). Confirma que el asistente puede armar pipelines de forma autónoma para plantillas futuras.
+- Compilados con éxito los 39 indicadores/patrones custom de sesiones anteriores.
+- Creado el repo Git privado de respaldo (`github.com/adearmasfinanzas-a11y/SQX-library`).
+- **Al cierre de la sesión: el Retest está corriendo.** Retomar revisando el resultado.
 
 ### 2026-07-06 — Adopción formal del proyecto y creación del sistema de continuidad
 - El usuario formalizó `SQX_Library` como el proyecto base de desarrollo a retomar en adelante.
