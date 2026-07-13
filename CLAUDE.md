@@ -82,7 +82,7 @@ Se ejecuta **siempre**, en este orden, cada vez que se inicia trabajo sobre una 
 - Motor (MT4 / MT5 / JForex / Tradestation) — determina qué indicadores están realmente disponibles
 - ¿Ya existe una plantilla con hipótesis similar en la biblioteca para otro activo, que deba revisarse para no duplicar lógica?
 - ¿Hay restricciones operativas propias que deban ir en "elementos cerrados" por defecto? (restringir Trading Options para forzar realismo operativo)
-- ¿El rango histórico disponible tiene algún cambio de régimen conocido que deba excluirse del IS?
+- ¿El rango histórico disponible tiene algún cambio de régimen conocido que deba excluirse del IS? **Esto se aplica también a la ventana OOS reservada para Retest, no solo al IS del Build — investigar el régimen real de esa ventana antes de correrla, no después de ver un resultado sospechoso** (ver `@.claude/rules/pipeline-multitarea-y-diseno-is.md` sección 1d).
 - **¿A qué broker apunta la plantilla?** Su estructura real de comisión/spread se define ANTES de configurar el Build (nunca un valor genérico sin conversación previa) — ver `@.claude/rules/configuracion-money-management.md` para el criterio completo.
 
 **Paso 5 — Chequeo de redundancia real.** Comparo la combinación (activo + hipótesis + familia lógica de Capa 2/3) contra el catálogo. Si hay solapamiento >70% conceptual con una plantilla existente, lo señalo y pregunto si versionar la existente, diferenciarla deliberadamente, o confirmar duplicado intencional.
