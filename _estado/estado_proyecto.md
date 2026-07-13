@@ -32,12 +32,13 @@ Este archivo es el **punto de partida obligatorio** de cualquier sesión de trab
 ## Foco actual
 
 **Plantilla activa:** `EURUSD-REVRANGE-H1-001` (EURUSD, Reversión a la media en rango, H1, MetaTrader5)
-**Estado (2026-07-13):** `pipeline_ensamblado_retest_corriendo`
-**Dónde quedó exactamente:** el Build terminó con 1000 estrategias (bruto, respaldado). El pipeline multi-tarea quedó **armado y corriendo**, 5 tareas activas en secuencia: `Build → Save to files → Filter strategies → Clear Databanks → Retest strategies`. Estado de cada una:
-- **Filter strategies** (filtro OOS nativo, sin código — ver `.claude/rules/mecanismo-condiciones-filtrado.md`): corrido, **535 de 1000 pasaron** (PF OOS≥1.2, NumberOfTrades OOS≥30) → quedaron en databank `OOS_Filtrado`.
-- **Save to files**: corrido, las 1000 en bruto respaldadas en `Reversion-Media\_runs\2026-07-12_corrida01\01_bruto_build\` (1000 `.sqx` + resumen XLSX) — ver `.claude/rules/mecanismo-savetofiles.md`.
-- **Clear Databanks**: corrida, limpió `Results` (465 que no pasaron el filtro, ya respaldadas en el bruto).
-- **Retest strategies**: **corriendo al cierre de esta sesión (noche 2026-07-12/13)** — configuración completa armada y verificada con el usuario campo por campo (ver `.claude/rules/pipeline-multitarea-y-diseno-is.md`, sección Retest): ventana OOS real reservada (`2025.01.01`-`2026.04.13`, datos nunca vistos por el Build), costos subidos ~30% como estrés, 4 condiciones de filtro (Trades/mes, PF/Ret-DD/Sharpe sobre OOS), cross-check en GBPUSD con costos reales de FTMO, código de descarte automático 512 activado. **Al retomar: revisar resultado del Retest (cuántas de las 535 sobrevivieron) antes de seguir.**
+**Estado (2026-07-13, cierre de sesión):** `retest_ejecutado_39_sobrevivientes`
+**Dónde quedó exactamente:** el Build terminó con 1000 estrategias (bruto, respaldado). El pipeline multi-tarea quedó armado (5 tareas: `Build → Save to files → Filter strategies → Clear Databanks → Retest strategies`) y **el Retest ya se ejecutó dos veces**:
+- **Filter strategies**: corrido, **535 de 1000 pasaron** (PF OOS≥1.2, NumberOfTrades OOS≥30 sobre el OOS interno del Build) → `OOS_Filtrado`.
+- **Save to files / Clear Databanks**: corridos sin problema, las 1000 en bruto respaldadas en `Reversion-Media\_runs\2026-07-12_corrida01\01_bruto_build\`.
+- **Retest strategies, primera corrida (costos estresados ~30%):** **0 de 535 pasaron.** Diagnóstico: PF(OOS) razonable en muchas pero Ret/DD(OOS) débil — coincide con una tendencia alcista fuerte y sostenida de EURUSD en la ventana OOS reservada (`2025.01.01`-`2026.04.13`, ~1.04→~1.20). Se fijó como principio permanente investigar régimen de mercado ANTES de correr una ventana OOS (sección 1d de `pipeline-multitarea-y-diseno-is.md`).
+- **Retest strategies, segunda corrida (mismos parámetros, costos reales del Build):** **39 de 535 pasaron.** Confirma que el estrés de costos era un factor dominante además del régimen. Se corrigió el diseño: el estrés de costos ya no se mezcla con la validación OOS primaria, se aplica después como prueba de margen de seguridad separada.
+- **Al retomar:** separar las 39 sobrevivientes reales con `Filtering` (modo "Éxito"), y decidir el orden de las próximas pasadas (Monte Carlo, Walk-Forward Matrix, prueba de estrés de costos aparte sobre estas 39). Ver `EURUSD/ReversionRango/changelog.md`, entrada 2026-07-13, para el detalle completo.
 
 **Hito técnico importante de esta sesión:** se confirmó que el asistente puede armar tareas completas del pipeline **de forma autónoma, editando el `project.cfx` directamente** (sin depender de que el usuario configure cada tarea a mano en la interfaz) — tras un incidente real (un método de escritura de ZIP corrompió el proyecto, restaurado sin pérdida de datos) se encontró y validó el método correcto. Ver `.claude/rules/mecanismo-edicion-directa-proyectos.md` — protocolo obligatorio para cualquier edición directa futura.
 
