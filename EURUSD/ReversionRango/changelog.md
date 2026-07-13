@@ -148,5 +148,5 @@
 
 ## Pendiente inmediato (recordar al usuario al cierre de esta tanda de tareas)
 - ~~Agregar `ClearDatabanks` sobre `Results`~~ — **hecho, ver entrada de arriba (2026-07-13).**
-- El fix del código de descarte automático 512 (operación atípica) que se había aplicado en el intento fallido se perdió al restaurar — pendiente de reaplicar (desde la interfaz, o con el método de reconstrucción ya validado) antes de correr el Retest si se considera necesario.
+- ~~El fix del código 512~~ — **reaplicado el 2026-07-13 con el método de reconstrucción ya validado (proyecto cerrado, backup, reconstrucción desde cero), confirmado por el usuario: el proyecto abrió perfectamente con ambos cambios (`Clear Databanks` + código 512) presentes.
 - Entre este Retest y el siguiente (pasada de Monte Carlo): agregar `Filtering` en modo "Éxito" (reutiliza el PASS/FAIL de la tarea anterior) para separar las que pasaron antes de pasar a la próxima etapa, sin borrar las que fallaron.
