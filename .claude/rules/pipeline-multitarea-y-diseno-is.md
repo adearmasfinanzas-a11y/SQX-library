@@ -78,6 +78,18 @@ Fuentes: [BBVA Research — Equilibrium of the EUR-USD exchange rate](https://ww
 
 Confirmado con documentación oficial: corre múltiples ciclos de optimización con distintas combinaciones de período de reoptimización y % Out-of-Sample, devuelve un gráfico 3D de robustez (cambios graduales = robusto; cambios abruptos = sobreajustado). **Esto no se configura en el Build inicial — es una tarea de Retest/CrossCheck posterior** (`CrossCheckWalkForwardMatrix`, `CrossCheckWalkForwardOptimization`, ya vistos como plugins disponibles en la instalación).
 
+## 2b. Convención de nombres de tareas del pipeline (establecida 2026-07-13)
+
+El nombre de cada tarea (`name=` en `config.xml`) se puede personalizar en la interfaz — importante en cuanto hay más de una tarea del mismo tipo (varios `Filtering`, varios `Retest`), donde el nombre por defecto ("Retest strategies") no distingue cuál es cuál. Convención aplicada a `EURUSD-REVRANGE-H1-001`, a reutilizar en toda plantilla futura:
+
+- `Construir estrategias` (Build, sin cambios).
+- `Guardar bruto (backup)` (SaveToFiles del resultado crudo del Build).
+- `Filtro OOS interno (Build)` (Filtering, primer filtro sobre el OOS que el propio Build ya conocía).
+- `Clear Databanks` (sin cambios, ya es claro).
+- `Retest N — <qué prueba>` para cada pasada de Retest, numeradas en orden (ej. `Retest 1 — ventana OOS reservada (costos reales)`, `Retest 2 — Monte Carlo`, `Retest 3 — Walk-Forward Matrix`).
+- `Separar supervivientes Retest N` para la tarea `Filtering` (modo Éxito) que sigue a cada Retest, separando lo que pasó sin borrar lo que no.
+- `Retest final — generalización <mercado>` para el paso dedicado y separado al final (ver corolario de eficiencia más abajo).
+
 ## 3. Estructura real del pipeline multi-tarea (verificada contra `GBPJPY BREAKOUT H1 - Dukascopy`)
 
 Un proyecto serio no es solo un Build — es una cadena de tareas en `config.xml`:
